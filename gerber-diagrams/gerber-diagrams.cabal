@@ -16,7 +16,7 @@ library
                      , linear >= 1.20.7 && < 1.21
                      , pretty-show >= 1.6.15 && < 1.7
                      , diagrams-contrib >= 1.4.1 && < 1.5
-                     , diagrams-lib >= 1.4.2 && < 1.5
+                     , diagrams-lib >= 1.4.1.2 && < 1.5
                      , gerber >= 0.1.0.0 && < 0.2
                      , recursion-schemes >= 5.0.2 && < 5.1
                      , mtl >= 2.2.1 && < 2.3

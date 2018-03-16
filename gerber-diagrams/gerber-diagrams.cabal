@@ -10,7 +10,7 @@ extra-source-files:  README.md, ChangeLog.md
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     Gerber.Diagrams
+  exposed-modules:     Data.Gerber.Diagrams
   build-depends:       base >=4.9 && <4.11
                      , containers >= 0.5.7.1 && < 0.6
                      , linear >= 1.20.7 && < 1.21

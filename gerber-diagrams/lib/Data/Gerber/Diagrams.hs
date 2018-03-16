@@ -7,7 +7,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Gerber.Diagrams where
+module Data.Gerber.Diagrams where
 
 import Prelude
 

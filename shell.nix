@@ -6,6 +6,7 @@ let
 
   f = { mkDerivation, base, containers, lens, linear, megaparsec
       , mtl, pretty-show, recursion-schemes, stdenv, text, transformers
+      , diagrams
       }:
       mkDerivation {
         pname = "gerber";
@@ -13,7 +14,7 @@ let
         src = ./.;
         libraryHaskellDepends = [
           base containers lens linear megaparsec mtl pretty-show
-          recursion-schemes text transformers
+          recursion-schemes text transformers diagrams
         ];
         license = stdenv.lib.licenses.mit;
       };

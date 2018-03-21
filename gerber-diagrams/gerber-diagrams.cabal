@@ -10,17 +10,11 @@ extra-source-files:  README.md, ChangeLog.md
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     Data.Gerber.Diagrams
+  exposed-modules:     Gerber.Diagrams
   build-depends:       base >=4.9 && <4.11
-                     , containers >= 0.5.7.1 && < 0.6
-                     , linear >= 1.20.7 && < 1.21
-                     , pretty-show >= 1.6.15 && < 1.7
-                     , diagrams-contrib >= 1.4.1 && < 1.5
-                     , diagrams-lib >= 1.4.1.2 && < 1.5
                      , gerber >= 0.1.0.0 && < 0.2
-                     , recursion-schemes >= 5.0.2 && < 5.1
-                     , mtl >= 2.2.1 && < 2.3
-                     , lens >= 4.15.4 && < 4.16
+                     , linear
+                     , diagrams-lib
   hs-source-dirs:      lib
   default-language:    Haskell2010
   ghc-options:         -Wall

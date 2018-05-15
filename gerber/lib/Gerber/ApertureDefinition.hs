@@ -8,6 +8,7 @@ data ApertureDefinition
   | Rectangle !RectangleModifiers
   | Obround !RectangleModifiers
   | Macro !StrictText.Text
+  | Polygon !PolygonModifiers
   deriving ( Eq, Show )
 
 
@@ -22,5 +23,14 @@ data RectangleModifiers = RectangleModifiers
   { width :: !Float
   , height :: !Float
   , rectangleHoleDiameter :: !( Maybe Float )
+  }
+  deriving ( Eq, Show )
+
+
+data PolygonModifiers = PolygonModifiers
+  { outerDiameter :: !Float
+  , numberOfVertices :: !Int
+  , rotation :: !( Maybe Float )
+  , polygonHoleDiameter :: !( Maybe Float )
   }
   deriving ( Eq, Show )

@@ -53,7 +53,7 @@ float = do
 
 
 negative :: Num a => Megaparsec.MonadParsec e StrictText.Text m => m a -> m a
-negative p = 
+negative p =
   asum [ negate <$ Megaparsec.char '-', pure id ]
     <*> p
 
@@ -69,7 +69,7 @@ string =
 
 
 newlines :: Megaparsec.MonadParsec e StrictText.Text m => m ()
-newlines = 
+newlines =
   void ( Megaparsec.takeWhileP Nothing ( `elem` ( "\n\r" :: [Char] ) ) )
 
 
@@ -131,6 +131,15 @@ ad = do
                 <$> float
                 <*> optional ( Megaparsec.char 'X' *> float )
             )
+
+    polygonModifiers =
+      Gerber.PolygonModifiers
+        <$> float
+        <* Megaparsec.char 'X'
+        <*> int
+        <*> optional ( Megaparsec.char 'X' *> float )
+        <*> optional ( Megaparsec.char 'X' *> float )
+
     rectangleModifiers =
       Gerber.RectangleModifiers
         <$> float
@@ -151,14 +160,16 @@ ad = do
         <*> rectangleModifiers
 
     polygon =
-      error "TODO"
+      Gerber.Polygon
          <$ Megaparsec.char 'P'
+         <* Megaparsec.char ','
+         <*> polygonModifiers
 
     macro =
       Gerber.Macro
         <$> Megaparsec.takeWhile1P Nothing ( /= '*' )
-   
-   
+
+
   Gerber.AD
     <$ Megaparsec.string "AD"
     <* Megaparsec.char 'D'
@@ -225,9 +236,9 @@ g04 = do
   Gerber.G04
     <$ ( Megaparsec.string "G04" <|> Megaparsec.string "LN" )
     <*> string
-    <* endOfBlock 
+    <* endOfBlock
 
-  
+
 lp :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 lp =
   Gerber.LP
@@ -256,7 +267,7 @@ d = do
                 ( StrictText.cons
                     <$> Megaparsec.satisfy isDigit
                     <*> Megaparsec.takeWhile1P Nothing isDigit
-                ) 
+                )
 
           guard ( n >= 10 )
 
@@ -310,7 +321,7 @@ of_ =
       <$ Megaparsec.string "OF"
       <*> optional ( Megaparsec.string "A" *> float )
       <*> optional ( Megaparsec.string "B" *> float )
-      <* endOfBlock 
+      <* endOfBlock
 
 
 ip :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command

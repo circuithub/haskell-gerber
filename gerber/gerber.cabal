@@ -23,8 +23,8 @@ library
                        Gerber.Movement
                        Gerber.Polarity
                        Gerber.Unit
-  build-depends:       base >=4.9 && <4.11
-                     , megaparsec >=6.3 && <6.4
+  build-depends:       base >=4.11 && <4.12
+                     , megaparsec >=6.4 && <6.5
                      , text >=1.2 && <1.3
                      , generic-deriving
                      , containers

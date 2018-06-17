@@ -31,13 +31,13 @@ data GraphicsState = GraphicsState
   }
   deriving ( Generic )
 
+instance Semigroup GraphicsState where
+  (<>) =
+    mappenddefault
 
 instance Monoid GraphicsState where
   mempty =
     memptydefault
-
-  mappend =
-    mappenddefault
 
 
 initialGraphicsState :: GraphicsState

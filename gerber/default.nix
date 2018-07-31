@@ -1,14 +1,13 @@
-{ mkDerivation, base, containers, foldl, generic-deriving, lens
-, linear, megaparsec, monoid-extras, mtl, pretty-show
-, recursion-schemes, stdenv, text, transformers
+{ mkDerivation, base, containers, foldl, generic-deriving
+, megaparsec, monoid-extras, stdenv, text
 }:
 mkDerivation {
   pname = "gerber";
   version = "0.1.0.0";
   src = ./.;
   libraryHaskellDepends = [
-    base containers foldl generic-deriving lens linear megaparsec
-    monoid-extras mtl pretty-show recursion-schemes text transformers
+    base containers foldl generic-deriving megaparsec monoid-extras
+    text
   ];
   license = stdenv.lib.licenses.mit;
 }

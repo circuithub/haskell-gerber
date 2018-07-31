@@ -1,13 +1,16 @@
-{ mkDerivation, base, containers, diagrams-contrib, diagrams-lib
-, gerber, lens, linear, mtl, pretty-show, recursion-schemes, stdenv
+{ mkDerivation, base, diagrams-cairo, diagrams-lib, foldl, gerber
+, linear, optparse-applicative, rio, stdenv, text
 }:
 mkDerivation {
   pname = "gerber-diagrams";
   version = "0.1.0.0";
   src = ./.;
-  libraryHaskellDepends = [
-    base containers diagrams-contrib diagrams-lib gerber lens linear
-    mtl pretty-show recursion-schemes
+  isLibrary = true;
+  isExecutable = true;
+  libraryHaskellDepends = [ base diagrams-lib gerber linear ];
+  executableHaskellDepends = [
+    base diagrams-cairo diagrams-lib foldl gerber optparse-applicative
+    rio text
   ];
   license = stdenv.lib.licenses.mit;
 }

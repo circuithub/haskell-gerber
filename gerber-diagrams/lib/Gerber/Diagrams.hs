@@ -25,30 +25,41 @@ gerberToDiagram
   => Gerber.Evaluator ( Diagrams.QDiagram b Diagrams.V2 Double Diagrams.Any )
 gerberToDiagram =
   Gerber.Evaluator
-    { Gerber.line =
-        \polarity aperture (x1, y1) (x2, y2) -> 
-          withPolarity
-            polarity 
-            ( case aperture of
-                ApertureDefinition.Circle params -> 
-                  Diagrams.lwG ( realToFrac ( ApertureDefinition.diameter params ) ) $
-                  Diagrams.lineCap Diagrams.LineCapRound $
-                  Diagrams.strokeLocTrail
-                    ( Diagrams.P ( realToFrac <$> (Diagrams.V2 x1 y1) )
-                        Diagrams.~~ Diagrams.P (realToFrac <$> Diagrams.V2 x2 y2)
-                    )
+    { Gerber.arc =
+        \polarity aperture currentPoint center end ->
+          let
+            arc =
+              let
+                toStart =
+                  Diagrams.p2 currentPoint .-. Diagrams.p2 center
 
-                ApertureDefinition.Rectangle params -> 
-                  Diagrams.lwG ( realToFrac ( ApertureDefinition.width params ) ) $
-                  Diagrams.lineCap Diagrams.LineCapSquare $
-                  Diagrams.strokeLocTrail
-                    ( Diagrams.P ( realToFrac <$> (Diagrams.V2 x1 y1) )
-                        Diagrams.~~ Diagrams.P (realToFrac <$> Diagrams.V2 x2 y2)
-                    )
+                toEnd =
+                  Diagrams.p2 end .-. Diagrams.p2 center
 
-                _ ->
-                  mempty -- Only circles and rectangles can be stroked
-            )
+              in
+              Diagrams.translate
+                ( realToFrac <$> Diagrams.r2 center )
+                ( Diagrams.scale
+                    ( realToFrac ( Diagrams.norm toStart ) )
+                    ( Diagrams.arcCCW
+                        ( realToFrac <$> Diagrams.direction toStart )
+                        ( realToFrac <$> Diagrams.direction toEnd )
+                    )
+                )
+
+          in
+          withPolarity polarity ( strokeAperture aperture arc )
+    , Gerber.line =
+        \polarity aperture (x1, y1) (x2, y2) ->
+          let
+            trail =
+              Diagrams.strokeLocTrail
+                ( Diagrams.P ( realToFrac <$> (Diagrams.V2 x1 y1) )
+                    Diagrams.~~ Diagrams.P (realToFrac <$> Diagrams.V2 x2 y2)
+                )
+
+          in
+          withPolarity polarity ( strokeAperture aperture trail )
     , Gerber.flash =
         \polarity aperture (x, y) ->
           withPolarity
@@ -97,7 +108,7 @@ fromEdges _ [] =
 
 fromEdges currentPoint ( Edge.Line end : edges ) =
   ( realToFrac <$> Diagrams.p2 currentPoint ) Diagrams.~~ ( realToFrac <$> Diagrams.p2 end )
-    <> fromEdges end edges 
+    <> fromEdges end edges
 
 fromEdges currentPoint ( Edge.ArcCW center end : edges ) =
   let
@@ -132,7 +143,7 @@ fromEdges currentPoint ( Edge.ArcCCW center end : edges ) =
         ( realToFrac <$> Diagrams.direction toEnd )
     )
     <> fromEdges end edges
-  
+
 
 
 withPolarity
@@ -147,3 +158,19 @@ withPolarity Polarity.Clear =
 
 withPolarity Polarity.Dark =
   Diagrams.lc Diagrams.black . Diagrams.fc Diagrams.black
+
+
+strokeAperture aperture =
+  case aperture of
+    ApertureDefinition.Circle params ->
+      Diagrams.lwG
+        ( realToFrac ( ApertureDefinition.diameter params ) )
+        . Diagrams.lineCap Diagrams.LineCapRound
+
+    ApertureDefinition.Rectangle params ->
+      Diagrams.lwG
+        ( realToFrac ( ApertureDefinition.width params ) )
+        . Diagrams.lineCap Diagrams.LineCapSquare
+
+    _ ->
+      const mempty -- Only circles and rectangles can be stroked

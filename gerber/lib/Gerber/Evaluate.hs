@@ -4,7 +4,7 @@ module Gerber.Evaluate where
 
 import GHC.Stack ( HasCallStack )
 import Data.Maybe ( fromMaybe )
-import Data.Monoid ( (<>), Any(..), First(..), getLast )
+import Data.Monoid ( (<>), First(..), getLast )
 import Data.Monoid.Deletable ( deleteR, toDeletable, unDelete )
 
 import qualified Control.Foldl as Fold
@@ -38,6 +38,13 @@ data Evaluator m = Evaluator
       Polarity.Polarity
         -> ( Float, Float )
         -> [ Edge.Edge ]
+        -> m
+  , arc ::
+      Polarity.Polarity
+        -> ApertureDefinition.ApertureDefinition
+        -> (Float, Float)
+        -> (Float, Float)
+        -> (Float, Float)
         -> m
   }
 
@@ -169,7 +176,7 @@ step evaluator state = \case
       interp =
         currentInterpolationMode state
 
-      ( newPoint, _ ) =
+      ( newPoint, offset ) =
         moveTo state to
 
       apertureDefinition =
@@ -178,22 +185,34 @@ step evaluator state = \case
       polarity =
         currentPolarity state
 
+      currentPoint =
+        getCurrentPoint state
+
+      center =
+        let
+          ( dx, dy ) =
+            offset
+
+        in
+        ( fst currentPoint + dx, snd currentPoint + dy )
+
     in
-    case interp of
-      InterpolationMode.Linear ->
-        ( line
+    ( case interp of
+        InterpolationMode.Linear ->
+          line
             evaluator
             polarity
             apertureDefinition
-            ( getCurrentPoint state )
+            currentPoint
             newPoint
-        , mempty { GraphicsState.currentPoint = pure newPoint }
-        )
 
-      _ ->
-        ( mempty
-        , mempty { GraphicsState.currentPoint = pure newPoint }
-        )
+        InterpolationMode.CircularCW ->
+          arc evaluator polarity apertureDefinition currentPoint center newPoint
+
+        InterpolationMode.CircularCCW ->
+          arc evaluator polarity apertureDefinition currentPoint center newPoint
+    , mempty { GraphicsState.currentPoint = pure newPoint }
+    )
 
   Command.D02 to | inRegion state ->
     let

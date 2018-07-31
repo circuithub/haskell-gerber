@@ -2,7 +2,7 @@
 {-# language OverloadedStrings #-}
 {-# language RecordWildCards #-}
 
-module Gerber.Grammar where
+module Gerber.Grammar ( parseGerber ) where
 
 import Control.Applicative ( (<|>), many, optional, some )
 import Control.Monad ( guard, void )
@@ -397,3 +397,7 @@ isStringChar :: Char -> Bool
 isStringChar c =
   isAlphaNum c
     || c `elem` ( "_+-/!?<>”’(){}.\\|&@# ,;$:=" :: [Char] )
+
+
+parseGerber =
+  Megaparsec.parse gerberFile "(gerber)"

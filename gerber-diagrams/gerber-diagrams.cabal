@@ -18,3 +18,20 @@ library
   hs-source-dirs:      lib
   default-language:    Haskell2010
   ghc-options:         -Wall
+
+executable render-gerbers
+  hs-source-dirs: exe
+  build-depends:
+                base
+              , gerber
+              , gerber-diagrams
+              , diagrams-cairo
+              , optparse-applicative
+              , rio
+              , text
+              , diagrams-lib
+              , diagrams-cairo
+              , foldl
+  default-language: Haskell2010
+  ghc-options: -Wall
+  main-is: Main.hs

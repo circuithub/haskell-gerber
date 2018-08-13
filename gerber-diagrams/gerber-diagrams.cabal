@@ -6,7 +6,7 @@ author:              Oliver Charles
 maintainer:          ollie@ocharles.org.uk
 category:            Data
 build-type:          Simple
-extra-source-files:  README.md, ChangeLog.md
+extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
 library

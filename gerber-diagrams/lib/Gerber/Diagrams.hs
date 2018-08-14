@@ -54,7 +54,7 @@ gerberToDiagram =
           let
             trail =
               Diagrams.strokeLocTrail
-                ( Diagrams.P ( realToFrac <$> (Diagrams.V2 x1 y1) )
+                ( Diagrams.P ( realToFrac <$> Diagrams.V2 x1 y1 )
                     Diagrams.~~ Diagrams.P (realToFrac <$> Diagrams.V2 x2 y2)
                 )
 

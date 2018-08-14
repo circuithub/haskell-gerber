@@ -86,7 +86,7 @@ mainWith CLIOptions{..} = do
                   putStrLn ( "Could not parse '" <> path <> "'" )
                   return Nothing
 
-                Right source -> do
+                Right source ->
                   case Gerber.parseGerber source of
                     Left e -> do
                       putStrLn ( "Could not parse '" <> path <> "':" )

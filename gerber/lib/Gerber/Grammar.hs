@@ -70,7 +70,7 @@ string =
 
 newlines :: Megaparsec.MonadParsec e StrictText.Text m => m ()
 newlines =
-  void ( Megaparsec.takeWhileP Nothing ( `elem` ( "\n\r" :: [Char] ) ) )
+  void ( Megaparsec.takeWhileP Nothing ( `elem` ( "\n\r" :: String ) ) )
 
 
 endOfBlock :: Megaparsec.MonadParsec e StrictText.Text m => m ()
@@ -95,7 +95,7 @@ format = do
 
 
 fs :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
-fs = do
+fs =
   Gerber.FS
     <$ Megaparsec.string "FSLA"
     <* Megaparsec.char 'X'
@@ -106,7 +106,7 @@ fs = do
 
 
 mo :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
-mo = do
+mo =
   Gerber.MO
     <$ Megaparsec.string "MO"
     <*>
@@ -186,53 +186,53 @@ ad = do
 
 
 g01 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
-g01 = do
+g01 =
   Gerber.G01
     <$ Megaparsec.string "G01"
     <* endOfBlock
 
 
 g03 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
-g03 = do
+g03 =
   Gerber.G03
     <$ Megaparsec.string "G03"
     <* endOfBlock
 
 
 g36 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
-g36 = do
+g36 =
   Gerber.G36
     <$ Megaparsec.string "G36"
     <* endOfBlock
 
 
 g37 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
-g37 = do
+g37 =
   Gerber.G37
     <$ Megaparsec.string "G37"
     <* endOfBlock
 
 g71 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
-g71 = do
+g71 =
   Gerber.G71
     <$ Megaparsec.string "G71"
     <* endOfBlock
 
 g75 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
-g75 = do
+g75 =
   Gerber.G75
     <$ Megaparsec.string "G75"
     <* endOfBlock
 
 
 m02 :: Megaparsec.MonadParsec e StrictText.Text m => m ()
-m02 = do
+m02 =
   void ( Megaparsec.string "M02" )
     <* endOfBlock
 
 
 g04 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
-g04 = do
+g04 =
   Gerber.G04
     <$ ( Megaparsec.string "G04" <|> Megaparsec.string "LN" )
     <*> string
@@ -255,7 +255,7 @@ polarity =
 
 
 d :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
-d = do
+d =
   Gerber.D
     <$ optional ( Megaparsec.string "G54" )
     <* Megaparsec.char 'D'
@@ -396,7 +396,7 @@ gerberFile =
 isStringChar :: Char -> Bool
 isStringChar c =
   isAlphaNum c
-    || c `elem` ( "_+-/!?<>”’(){}.\\|&@# ,;$:=" :: [Char] )
+    || c `elem` ( "_+-/!?<>”’(){}.\\|&@# ,;$:=" :: String )
 
 
 parseGerber =

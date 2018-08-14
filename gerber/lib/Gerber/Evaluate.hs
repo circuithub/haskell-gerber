@@ -171,7 +171,7 @@ step evaluator state = \case
         }
     )
 
-  Command.D01 to | otherwise ->
+  Command.D01 to | not ( inRegion state ) ->
     let
       interp =
         currentInterpolationMode state

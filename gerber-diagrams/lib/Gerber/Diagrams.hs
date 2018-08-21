@@ -6,18 +6,15 @@ module Gerber.Diagrams where
 
 import Data.Monoid ( (<>) )
 import Data.Typeable ( Typeable )
-import Linear ( (^-^), (^+^) )
 import Linear.Affine ( (.-.) )
 
 import qualified Diagrams.Prelude as Diagrams
-import qualified Linear
 
 import qualified Gerber.ApertureDefinition as ApertureDefinition
 import qualified Gerber.Evaluate as Gerber
 import qualified Gerber.Evaluate.Edge as Edge
 import qualified Gerber.Polarity as Polarity
-
-import Debug.Trace
+import qualified Linear
 
 
 gerberToDiagram
@@ -103,6 +100,14 @@ gerberToDiagram =
     }
 
 
+fromEdges
+  :: ( Diagrams.Transformable a
+     , Monoid a
+     , Diagrams.TrailLike a
+     , RealFloat ( Diagrams.N a )
+     , Diagrams.V a ~ Linear.V2
+     )
+  => ( Float, Float ) -> [ Edge.Edge ] -> a
 fromEdges _ [] =
   mempty
 
@@ -160,6 +165,13 @@ withPolarity Polarity.Dark =
   Diagrams.lc Diagrams.black . Diagrams.fc Diagrams.black
 
 
+strokeAperture
+  :: ( Diagrams.HasStyle c
+     , Typeable ( Diagrams.N c )
+     , Fractional ( Diagrams.N c )
+     , Monoid c
+     )
+  => ApertureDefinition.ApertureDefinition -> c -> c
 strokeAperture aperture =
   case aperture of
     ApertureDefinition.Circle params ->

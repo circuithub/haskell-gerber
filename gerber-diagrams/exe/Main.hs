@@ -78,12 +78,13 @@ mainWith CLIOptions{..} = do
       catMaybes
       ( traverse
           ( \path -> do
-              source <-
+              res <-
                 tryAny ( StrictText.readFile path )
 
-              case source of
+              case res of
                 Left e -> do
-                  putStrLn ( "Could not parse '" <> path <> "'" )
+                  putStrLn
+                    ( "Could not parse '" <> path <> "': " <> displayException e )
                   return Nothing
 
                 Right source ->
@@ -106,7 +107,7 @@ mainWith CLIOptions{..} = do
     d =
       mconcat
         ( zipWith
-            ( \col d -> Diagrams.lc col ( Diagrams.fc col d ) )
+            ( \col -> Diagrams.lc col . Diagrams.fc col )
             ( cycle [ Diagrams.red, Diagrams.green, Diagrams.blue ] )
             diagrams
         )

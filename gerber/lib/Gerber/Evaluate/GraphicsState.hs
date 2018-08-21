@@ -2,7 +2,7 @@
 
 module Gerber.Evaluate.GraphicsState where
 
-import Data.Monoid ( Any, First, Last )
+import Data.Monoid ( First, Last )
 import GHC.Generics ( Generic )
 import Generics.Deriving.Monoid ( memptydefault, mappenddefault )
 import Data.Monoid.Deletable ( Deletable )

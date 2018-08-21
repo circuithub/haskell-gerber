@@ -226,6 +226,9 @@ step evaluator state = \case
     ( case unDelete ( GraphicsState.currentContour state) of
         ( First ( Just start ), edges ) ->
           fillRegion evaluator polarity start edges
+
+        _ ->
+          error "Region finished without any edges"
     , mempty
         { GraphicsState.currentContour =
             deleteR <> toDeletable ( pure newPoint, mempty )
@@ -406,15 +409,15 @@ currentAperture
   => GraphicsState.GraphicsState -> ApertureDefinition.ApertureDefinition
 currentAperture state =
   let
-    DCodeNumber.DCodeNumber currentAperture =
+    DCodeNumber.DCodeNumber aperture =
       fromMaybe
         ( error "No current aperture selected" )
         ( getLast ( GraphicsState.currentAperture state ) )
 
   in
   fromMaybe
-      ( error ( "No definition for aperture D" <> show currentAperture ) )
-      ( IntMap.lookup currentAperture ( GraphicsState.apertureDictionary state ) )
+      ( error ( "No definition for aperture D" <> show aperture ) )
+      ( IntMap.lookup aperture ( GraphicsState.apertureDictionary state ) )
 
 
 currentPolarity

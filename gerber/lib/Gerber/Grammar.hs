@@ -366,15 +366,15 @@ deprecated = do
       , Gerber.G03 <$ Megaparsec.string "G03"
       ]
 
-  d <- d01 <|> d02
+  dcode <- d01 <|> d02
 
-  return [ g, d ]
+  return [ g, dcode ]
 
 
 extended :: Megaparsec.MonadParsec e StrictText.Text m => m a -> m [a]
-extended command =
+extended parser =
   Megaparsec.char '%'
-    *> some command
+    *> some parser
     <* Megaparsec.char '%'
     <* newlines
 
@@ -399,5 +399,7 @@ isStringChar c =
     || c `elem` ( "_+-/!?<>”’(){}.\\|&@# ,;$:=" :: String )
 
 
+parseGerber
+  :: StrictText.Text -> Either (Megaparsec.ParseError Char Void) [Gerber.Command]
 parseGerber =
   Megaparsec.parse gerberFile "(gerber)"

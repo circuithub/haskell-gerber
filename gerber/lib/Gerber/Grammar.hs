@@ -311,8 +311,8 @@ am :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 am =
     Gerber.AM
       <$ Megaparsec.string "AM"
-      <* Megaparsec.someTill Megaparsec.anyChar endOfBlock
-      <* Megaparsec.manyTill Megaparsec.anyChar ( Megaparsec.lookAhead ( Megaparsec.char '%' ) )
+      <* Megaparsec.someTill Megaparsec.anySingle endOfBlock
+      <* Megaparsec.manyTill Megaparsec.anySingle ( Megaparsec.lookAhead ( Megaparsec.char '%' ) )
 
 
 of_ :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
@@ -400,6 +400,7 @@ isStringChar c =
 
 
 parseGerber
-  :: StrictText.Text -> Either (Megaparsec.ParseError Char Void) [Gerber.Command]
+  :: StrictText.Text
+  -> Either (Megaparsec.ParseErrorBundle StrictText.Text Void) [Gerber.Command]
 parseGerber =
   Megaparsec.parse gerberFile "(gerber)"

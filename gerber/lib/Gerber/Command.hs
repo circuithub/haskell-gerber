@@ -30,5 +30,5 @@ data Command
   | MO !Unit
   | OF !( Maybe Float ) !( Maybe Float )
   | AM
+  | SR !Movement
   deriving ( Eq, Show )
-

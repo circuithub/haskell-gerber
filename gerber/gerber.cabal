@@ -10,16 +10,16 @@ extra-source-files:  README.md, ChangeLog.md
 cabal-version:       >= 2.0
 
 library
-  exposed-modules:     Gerber.Grammar
-                       Gerber.Evaluate
-                       Gerber.Evaluate.GraphicsState
-                       Gerber.Evaluate.GraphicsState.InterpolationMode
-                       Gerber.Evaluate.Edge
-                       Gerber.ApertureDefinition
+  exposed-modules:     Gerber.ApertureDefinition
                        Gerber.Command
                        Gerber.DCodeNumber
+                       Gerber.Evaluate
+                       Gerber.Evaluate.Edge
+                       Gerber.Evaluate.GraphicsState
+                       Gerber.Evaluate.GraphicsState.InterpolationMode
                        Gerber.Flash
                        Gerber.Format
+                       Gerber.Grammar
                        Gerber.Movement
                        Gerber.Polarity
                        Gerber.Unit

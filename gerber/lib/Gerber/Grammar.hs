@@ -284,6 +284,15 @@ movement =
     <*> optional ( Megaparsec.char 'J' *> negative int )
 
 
+movementF :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Movement
+movementF =
+  Gerber.Movement
+    <$> optional ( Megaparsec.char 'X' *> negative int )
+    <*> optional ( Megaparsec.char 'Y' *> negative int )
+    <*> optional ( Megaparsec.char 'I' *> ( round <$> negative float ) )
+    <*> optional ( Megaparsec.char 'J' *> ( round <$> negative float ) )
+
+
 d01 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 d01 =
     Gerber.D01
@@ -313,6 +322,14 @@ am =
       <$ Megaparsec.string "AM"
       <* Megaparsec.someTill Megaparsec.anySingle endOfBlock
       <* Megaparsec.manyTill Megaparsec.anySingle ( Megaparsec.lookAhead ( Megaparsec.char '%' ) )
+
+
+sr :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
+sr =
+    Gerber.SR
+      <$  Megaparsec.string "SR"
+      <*> movementF
+      <* endOfBlock
 
 
 of_ :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
@@ -354,6 +371,7 @@ command =
         , g71
         , of_
         , am
+        , sr
         ]
     )
 
@@ -366,7 +384,8 @@ deprecated = do
       , Gerber.G03 <$ Megaparsec.string "G03"
       ]
 
-  dcode <- d01 <|> d02
+  dcode <-
+    Megaparsec.try d01 <|> d02
 
   return [ g, dcode ]
 

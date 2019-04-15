@@ -1,4 +1,8 @@
+{-# language DisambiguateRecordFields #-}
 {-# language LambdaCase #-}
+{-# language NamedFieldPuns #-}
+{-# language TypeApplications #-}
+{-# language ScopedTypeVariables #-}
 
 module Gerber.Evaluate where
 
@@ -19,6 +23,7 @@ import qualified Gerber.Evaluate.GraphicsState.InterpolationMode as Interpolatio
 import qualified Gerber.Format as Format
 import qualified Gerber.Movement as Movement
 import qualified Gerber.Polarity as Polarity
+import qualified Gerber.StepRepeat as StepRepeat
 import qualified Gerber.Unit as Unit
 
 
@@ -46,6 +51,11 @@ data Evaluator m = Evaluator
         -> (Float, Float)
         -> (Float, Float)
         -> m
+  , translate ::
+      Float
+        -> Float
+        -> m
+        -> m
   }
 
 
@@ -65,11 +75,12 @@ evaluate evaluator =
 
 
 step
-  :: Monoid m
+  :: forall m.
+     Monoid m
   => Evaluator m
-  -> GraphicsState.GraphicsState
+  -> GraphicsState.GraphicsState m
   -> Command.Command
-  -> ( m, GraphicsState.GraphicsState )
+  -> ( m, GraphicsState.GraphicsState m )
 step evaluator state = \case
   Command.FS xfmt yfmt ->
     ( mempty
@@ -171,7 +182,7 @@ step evaluator state = \case
         }
     )
 
-  Command.D01 to | not ( inRegion state ) ->
+  Command.D01 to | otherwise -> drawToImageOrStepRepeat $
     let
       interp =
         currentInterpolationMode state
@@ -238,6 +249,7 @@ step evaluator state = \case
     )
 
   Command.D02 to ->
+    drawToImageOrStepRepeat $
     let
       ( newPoint, _ ) =
         moveTo state to
@@ -248,6 +260,7 @@ step evaluator state = \case
     )
 
   Command.D03 to ->
+    drawToImageOrStepRepeat $
     let
       ( newPoint, _ ) =
         moveTo state to
@@ -274,6 +287,7 @@ step evaluator state = \case
     )
 
   Command.G37 {} ->
+    drawToImageOrStepRepeat $
     let
       polarity =
         currentPolarity state
@@ -323,15 +337,71 @@ step evaluator state = \case
   Command.AM ->
     mempty
 
-  Command.SR{} ->
-    mempty
+  Command.SR movement ->
+    flushSR
+      ( mempty
+      , ( mempty @( GraphicsState.GraphicsState m ) )
+        { GraphicsState.stepRepeat = deleteR <> toDeletable ( pure movement, mempty ) }
+      )
+
+  Command.M02 ->
+    flushSR mempty
 
   cmd ->
     error ( show cmd )
 
+  where
+
+    flushSR =
+      let
+        close =
+          case unDelete ( GraphicsState.stepRepeat state ) of
+            ( First ( Just movement ), drawing ) ->
+              let
+                StepRepeat.StepRepeat{ xRepeats, yRepeats, xStep, yStep } =
+                  movement
+
+              in
+              ( mconcat
+                  ( do
+                      xi <-
+                        [ 1 .. xRepeats ]
+
+                      yi <-
+                        [ 1 .. yRepeats ]
+
+                      return
+                        ( translate
+                            evaluator
+                            ( fromIntegral ( xi - 1 ) * toMM state xStep )
+                            ( fromIntegral ( yi - 1 ) * toMM state yStep )
+                            drawing
+                        )
+                  )
+              , mempty
+              )
+
+            _ ->
+              mempty
+
+
+      in
+      mappend close
+
+
+    drawToImageOrStepRepeat ( drawing, stateChange ) =
+      case unDelete ( GraphicsState.stepRepeat state ) of
+        ( First Nothing, _ ) ->
+          ( drawing, stateChange )
+
+        ( _, _ ) ->
+          ( mempty
+          , stateChange <> ( mempty @( GraphicsState.GraphicsState m ) ) { GraphicsState.stepRepeat = toDeletable ( mempty, drawing ) }
+          )
+
 
 moveTo
-  :: GraphicsState.GraphicsState
+  :: GraphicsState.GraphicsState m
   -> Movement.Movement
   -> ( ( Float, Float ), ( Float, Float ) )
 moveTo state to =
@@ -383,14 +453,14 @@ moveTo state to =
   )
 
 
-getCurrentPoint :: GraphicsState.GraphicsState -> (Float, Float)
+getCurrentPoint :: GraphicsState.GraphicsState m -> (Float, Float)
 getCurrentPoint state =
   fromMaybe
     ( error "Current point undefined" )
     ( getLast ( GraphicsState.currentPoint state ) )
 
 
-toMM :: Fractional a => GraphicsState.GraphicsState -> a -> a
+toMM :: Fractional a => GraphicsState.GraphicsState m -> a -> a
 toMM state x =
   let
     unit =
@@ -409,7 +479,7 @@ toMM state x =
 
 currentAperture
   :: HasCallStack
-  => GraphicsState.GraphicsState -> ApertureDefinition.ApertureDefinition
+  => GraphicsState.GraphicsState m -> ApertureDefinition.ApertureDefinition
 currentAperture state =
   let
     DCodeNumber.DCodeNumber aperture =
@@ -425,7 +495,7 @@ currentAperture state =
 
 currentPolarity
   :: HasCallStack
-  => GraphicsState.GraphicsState -> Polarity.Polarity
+  => GraphicsState.GraphicsState m -> Polarity.Polarity
 currentPolarity state =
   fromMaybe
     ( error "Polarity not set" )
@@ -434,13 +504,13 @@ currentPolarity state =
 
 currentInterpolationMode
   :: HasCallStack
-  => GraphicsState.GraphicsState -> InterpolationMode.InterpolationMode
+  => GraphicsState.GraphicsState m -> InterpolationMode.InterpolationMode
 currentInterpolationMode state =
   fromMaybe
     InterpolationMode.Linear
     ( getLast ( GraphicsState.interpolationMode state ) )
 
 
-inRegion :: GraphicsState.GraphicsState -> Bool
+inRegion :: GraphicsState.GraphicsState m -> Bool
 inRegion =
   fromMaybe False . getLast . GraphicsState.inRegion

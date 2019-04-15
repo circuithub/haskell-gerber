@@ -15,10 +15,11 @@ import qualified Gerber.Evaluate.Edge as Edge
 import qualified Gerber.Evaluate.GraphicsState.InterpolationMode as Gerber
 import qualified Gerber.Format as Gerber
 import qualified Gerber.Polarity as Gerber
+import qualified Gerber.StepRepeat as Gerber
 import qualified Gerber.Unit as Gerber
 
 
-data GraphicsState = GraphicsState
+data GraphicsState m = GraphicsState
   { coordinateSystem :: !( First ( Gerber.Format, Gerber.Format ) )
   , unit :: !( First Gerber.Unit )
   , apertureDictionary :: !( IntMap.IntMap Gerber.ApertureDefinition )
@@ -28,19 +29,20 @@ data GraphicsState = GraphicsState
   , inRegion :: !( Last Bool )
   , polarity :: !( Last Gerber.Polarity )
   , currentContour :: Deletable ( First ( Float, Float ), [ Edge.Edge ] )
+  , stepRepeat :: Deletable ( First Gerber.StepRepeat, m )
   }
   deriving ( Generic )
 
-instance Semigroup GraphicsState where
+instance Monoid m => Semigroup ( GraphicsState m ) where
   (<>) =
     mappenddefault
 
-instance Monoid GraphicsState where
+instance Monoid m => Monoid ( GraphicsState m ) where
   mempty =
     memptydefault
 
 
-initialGraphicsState :: GraphicsState
+initialGraphicsState :: Monoid m => GraphicsState m
 initialGraphicsState =
   mempty
     { polarity = pure Gerber.Dark

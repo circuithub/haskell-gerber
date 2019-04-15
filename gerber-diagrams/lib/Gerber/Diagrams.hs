@@ -97,6 +97,9 @@ gerberToDiagram =
                     ( realToFrac <$> Diagrams.p2 start )
                 )
             )
+    , Gerber.translate =
+        \x y ->
+          Diagrams.translate ( Diagrams.r2 ( realToFrac x, realToFrac y ) )
     }
 
 

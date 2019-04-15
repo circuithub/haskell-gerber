@@ -7,6 +7,7 @@ import Gerber.DCodeNumber ( DCodeNumber )
 import Gerber.Format ( Format )
 import Gerber.Movement ( Movement )
 import Gerber.Polarity ( Polarity )
+import Gerber.StepRepeat ( StepRepeat )
 import Gerber.Unit ( Unit )
 
 
@@ -30,5 +31,6 @@ data Command
   | MO !Unit
   | OF !( Maybe Float ) !( Maybe Float )
   | AM
-  | SR !Movement
+  | SR !StepRepeat
+  | M02
   deriving ( Eq, Show )

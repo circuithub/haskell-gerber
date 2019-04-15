@@ -22,6 +22,7 @@ library
                        Gerber.Grammar
                        Gerber.Movement
                        Gerber.Polarity
+                       Gerber.StepRepeat
                        Gerber.Unit
   build-depends:       base ^>= 4.12
                      , megaparsec ^>= 7.0

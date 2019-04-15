@@ -23,6 +23,7 @@ import qualified Gerber.DCodeNumber as Gerber
 import qualified Gerber.Format as Gerber
 import qualified Gerber.Movement as Gerber
 import qualified Gerber.Polarity as Gerber
+import qualified Gerber.StepRepeat as Gerber
 import qualified Gerber.Unit as Gerber
 
 
@@ -225,9 +226,10 @@ g75 =
     <* endOfBlock
 
 
-m02 :: Megaparsec.MonadParsec e StrictText.Text m => m ()
+m02 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 m02 =
-  void ( Megaparsec.string "M02" )
+  Gerber.M02
+    <$ Megaparsec.string "M02"
     <* endOfBlock
 
 
@@ -284,13 +286,13 @@ movement =
     <*> optional ( Megaparsec.char 'J' *> negative int )
 
 
-movementF :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Movement
-movementF =
-  Gerber.Movement
-    <$> optional ( Megaparsec.char 'X' *> negative int )
-    <*> optional ( Megaparsec.char 'Y' *> negative int )
-    <*> optional ( Megaparsec.char 'I' *> ( round <$> negative float ) )
-    <*> optional ( Megaparsec.char 'J' *> ( round <$> negative float ) )
+stepRepeat :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.StepRepeat
+stepRepeat =
+  Gerber.StepRepeat
+    <$> ( Megaparsec.char 'X' *> int )
+    <*> ( Megaparsec.char 'Y' *> int )
+    <*> ( Megaparsec.char 'I' *> negative float )
+    <*> ( Megaparsec.char 'J' *> negative float )
 
 
 d01 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
@@ -328,7 +330,7 @@ sr :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 sr =
     Gerber.SR
       <$  Megaparsec.string "SR"
-      <*> movementF
+      <*> stepRepeat
       <* endOfBlock
 
 
@@ -405,11 +407,18 @@ commands =
 
 gerberFile :: Megaparsec.MonadParsec Void StrictText.Text m => m [ Gerber.Command ]
 gerberFile =
-  concat
-    <$ many endOfBlock
-    <*> many ( commands <|> ( concat <$> extended commands ) )
-    <* m02
+  snoc
+    <$> ( concat
+            <$ many endOfBlock
+            <*> many ( commands <|> ( concat <$> extended commands ) )
+        )
+    <*> m02
     <* Megaparsec.eof
+
+  where
+
+    snoc xs x =
+      xs ++ [x]
 
 
 isStringChar :: Char -> Bool

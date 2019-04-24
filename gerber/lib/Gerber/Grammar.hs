@@ -6,7 +6,7 @@ module Gerber.Grammar ( parseGerber ) where
 
 import Control.Applicative ( (<|>), many, optional, some )
 import Control.Monad ( guard, void )
-import Data.Char ( isAlphaNum, isDigit )
+import Data.Char ( isDigit )
 import Data.Foldable ( asum )
 import Data.Monoid ( (<>) )
 import Data.Void ( Void )
@@ -423,8 +423,7 @@ gerberFile =
 
 isStringChar :: Char -> Bool
 isStringChar c =
-  isAlphaNum c
-    || c `elem` ( "_+-/!?<>”’(){}.\\|&@# ,;$:=" :: String )
+  c `notElem` ( "\n\r%*" :: String )
 
 
 parseGerber

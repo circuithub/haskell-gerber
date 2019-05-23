@@ -13,6 +13,7 @@ library
   exposed-modules:     Gerber.ApertureDefinition
                        Gerber.Command
                        Gerber.DCodeNumber
+                       Gerber.EncodedDecimal
                        Gerber.Evaluate
                        Gerber.Evaluate.Edge
                        Gerber.Evaluate.GraphicsState
@@ -21,6 +22,7 @@ library
                        Gerber.Format
                        Gerber.Grammar
                        Gerber.Movement
+                       Gerber.Padding
                        Gerber.Polarity
                        Gerber.StepRepeat
                        Gerber.Unit

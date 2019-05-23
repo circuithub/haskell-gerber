@@ -6,7 +6,7 @@ module Gerber.Grammar ( parseGerber ) where
 
 import Control.Applicative ( (<|>), many, optional, some )
 import Control.Monad ( guard, void )
-import Data.Char ( isDigit )
+import Data.Char ( digitToInt, isDigit )
 import Data.Foldable ( asum )
 import Data.Monoid ( (<>) )
 import Data.Void ( Void )
@@ -17,9 +17,11 @@ import qualified Data.Text as StrictText
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as Megaparsec
 
+import qualified Gerber.Padding as Padding
 import qualified Gerber.ApertureDefinition as Gerber
 import qualified Gerber.Command as Gerber
 import qualified Gerber.DCodeNumber as Gerber
+import qualified Gerber.EncodedDecimal as Gerber
 import qualified Gerber.Format as Gerber
 import qualified Gerber.Movement as Gerber
 import qualified Gerber.Polarity as Gerber
@@ -98,7 +100,10 @@ format = do
 fs :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 fs =
   Gerber.FS
-    <$ Megaparsec.string "FSLA"
+    <$> asum
+          [ Padding.PadLeading <$ Megaparsec.string "FSLA"
+          , Padding.PadTrailing <$ Megaparsec.string "FSTA"
+          ]
     <* Megaparsec.char 'X'
     <*> format
     <* Megaparsec.char 'Y'
@@ -280,10 +285,24 @@ d =
 movement :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Movement
 movement =
   Gerber.Movement
-    <$> optional ( Megaparsec.char 'X' *> negative int )
-    <*> optional ( Megaparsec.char 'Y' *> negative int )
-    <*> optional ( Megaparsec.char 'I' *> negative int )
-    <*> optional ( Megaparsec.char 'J' *> negative int )
+    <$> optional ( Megaparsec.char 'X' *> encodedDecimal )
+    <*> optional ( Megaparsec.char 'Y' *> encodedDecimal )
+    <*> optional ( Megaparsec.char 'I' *> encodedDecimal )
+    <*> optional ( Megaparsec.char 'J' *> encodedDecimal )
+
+  where
+
+    encodedDecimal = do
+      negative <-
+        asum
+          [ True <$ Megaparsec.char '-'
+          , pure False
+          ]
+
+      digits <-
+        map digitToInt . StrictText.unpack <$> Megaparsec.takeWhileP Nothing isDigit
+
+      return Gerber.EncodedDecimal{..}
 
 
 stepRepeat :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.StepRepeat

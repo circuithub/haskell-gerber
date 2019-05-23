@@ -6,6 +6,7 @@
 
 module Gerber.Evaluate where
 
+import Data.Char ( intToDigit )
 import GHC.Stack ( HasCallStack )
 import Data.Maybe ( fromMaybe )
 import Data.Monoid ( (<>), First(..), getLast )
@@ -17,11 +18,13 @@ import qualified Data.IntMap.Strict as IntMap
 import qualified Gerber.ApertureDefinition as ApertureDefinition
 import qualified Gerber.Command as Command
 import qualified Gerber.DCodeNumber as DCodeNumber
+import qualified Gerber.EncodedDecimal as EncodedDecimal
 import qualified Gerber.Evaluate.Edge as Edge
 import qualified Gerber.Evaluate.GraphicsState as GraphicsState
 import qualified Gerber.Evaluate.GraphicsState.InterpolationMode as InterpolationMode
 import qualified Gerber.Format as Format
 import qualified Gerber.Movement as Movement
+import qualified Gerber.Padding as Padding
 import qualified Gerber.Polarity as Polarity
 import qualified Gerber.StepRepeat as StepRepeat
 import qualified Gerber.Unit as Unit
@@ -82,9 +85,9 @@ step
   -> Command.Command
   -> ( m, GraphicsState.GraphicsState m )
 step evaluator state = \case
-  Command.FS xfmt yfmt ->
+  Command.FS padding xfmt yfmt ->
     ( mempty
-    , mempty { GraphicsState.coordinateSystem = pure ( xfmt, yfmt ) }
+    , mempty { GraphicsState.coordinateSystem = pure ( padding, xfmt, yfmt ) }
     )
 
   Command.AD ( DCodeNumber.DCodeNumber n ) def ->
@@ -409,46 +412,57 @@ moveTo state to =
     currentPoint =
       getCurrentPoint state
 
-    coordinateSystem =
+    ( padding, xCoordinateSystem, yCoordinateSystem ) =
       fromMaybe
         ( error "Coordinate system undefined" )
         ( getFirst ( GraphicsState.coordinateSystem state ) )
 
-    decodeCoordElement :: Format.Format -> Int -> Float
-    decodeCoordElement fmt x =
+    decodeCoordElement :: Format.Format -> EncodedDecimal.EncodedDecimal -> Float
+    decodeCoordElement fmt EncodedDecimal.EncodedDecimal{ negative, digits } =
       let
-        str =
-          show (abs x)
-
         len =
           Format.integerPositions fmt + Format.decimalPositions fmt
 
         padded =
-          replicate (len - length str) '0' ++ str
+          case padding of
+            Padding.PadLeading ->
+              replicate ( len - length digits ) 0 <> digits
+
+            Padding.PadTrailing ->
+              take len ( digits ++ repeat 0 )
 
         ( intPart, dec ) =
           splitAt ( Format.integerPositions fmt ) padded
 
+        sign =
+          if negative then
+            -1
+
+          else
+            1
+
       in
       toMM state
-        ( read ( intPart <> "." <> dec ) * fromIntegral ( signum x ) )
+        ( read ( map intToDigit intPart <> "." <> map intToDigit dec ) * sign )
 
   in
   ( ( maybe
         ( fst currentPoint )
-        ( decodeCoordElement ( fst coordinateSystem ) )
+        ( decodeCoordElement xCoordinateSystem )
         ( Movement.x to )
     , maybe
         ( snd currentPoint )
-        ( decodeCoordElement ( snd coordinateSystem ) )
+        ( decodeCoordElement yCoordinateSystem )
         ( Movement.y to )
     )
-  , ( decodeCoordElement
-        ( fst coordinateSystem )
-        ( fromMaybe 0 ( Movement.i to ) )
-    , decodeCoordElement
-        ( snd coordinateSystem )
-        ( fromMaybe 0 ( Movement.j to ) )
+  , ( maybe
+        0
+        ( decodeCoordElement xCoordinateSystem )
+        ( Movement.i to )
+    , maybe
+        0
+        (decodeCoordElement yCoordinateSystem )
+        ( Movement.j to )
     )
   )
 

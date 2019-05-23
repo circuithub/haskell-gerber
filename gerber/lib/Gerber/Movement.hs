@@ -1,9 +1,11 @@
 module Gerber.Movement ( Movement(..) ) where
 
+import Gerber.EncodedDecimal ( EncodedDecimal )
+
 data Movement = Movement
-  { x :: !( Maybe Int )
-  , y :: !( Maybe Int )
-  , i :: !( Maybe Int )
-  , j :: !( Maybe Int )
+  { x :: !( Maybe EncodedDecimal )
+  , y :: !( Maybe EncodedDecimal )
+  , i :: !( Maybe EncodedDecimal )
+  , j :: !( Maybe EncodedDecimal )
   }
   deriving ( Eq, Show )

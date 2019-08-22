@@ -318,7 +318,7 @@ d01 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 d01 =
     Gerber.D01
       <$> movement
-      <* Megaparsec.string "D01"
+      <* optional ( Megaparsec.string "D01" )
       <* endOfBlock
 
 

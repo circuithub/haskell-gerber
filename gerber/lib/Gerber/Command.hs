@@ -35,4 +35,5 @@ data Command
   | SR !StepRepeat
   | M02
   | SF
+  | MI
   deriving ( Eq, Show )

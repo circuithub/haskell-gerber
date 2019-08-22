@@ -353,6 +353,9 @@ step evaluator state = \case
   Command.SF ->
     mempty
 
+  Command.MI ->
+    mempty
+
   cmd ->
     error ( show cmd )
 

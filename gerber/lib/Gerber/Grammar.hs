@@ -353,6 +353,14 @@ sr =
       <* endOfBlock
 
 
+sf :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
+sf =
+    Gerber.SF
+      <$ Megaparsec.string "SF"
+      <* optional ( Megaparsec.string "A" *> float >>= guard . ( == 1 ) )
+      <* optional ( Megaparsec.string "B" *> float >>= guard . ( == 1 ) )
+      <* endOfBlock
+
 of_ :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 of_ =
     Gerber.OF
@@ -393,6 +401,7 @@ command =
         , of_
         , am
         , sr
+        , sf
         ]
     )
 

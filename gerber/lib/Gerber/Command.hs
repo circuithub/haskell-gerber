@@ -34,4 +34,5 @@ data Command
   | AM
   | SR !StepRepeat
   | M02
+  | SF
   deriving ( Eq, Show )

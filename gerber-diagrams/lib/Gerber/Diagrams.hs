@@ -38,9 +38,16 @@ gerberToDiagram =
                 ( realToFrac <$> Diagrams.r2 center )
                 ( Diagrams.scale
                     ( realToFrac ( Diagrams.norm toStart ) )
-                    ( Diagrams.arcCCW
-                        ( realToFrac <$> Diagrams.direction toStart )
-                        ( realToFrac <$> Diagrams.direction toEnd )
+                    ( if Linear.nearZero ( toStart .-. toEnd ) then
+                        Diagrams.arc'
+                          1
+                          ( realToFrac <$> Diagrams.direction toStart )
+                          ( 1 Diagrams.@@ Diagrams.turn )
+
+                      else
+                        Diagrams.arcCCW
+                          ( realToFrac <$> Diagrams.direction toStart )
+                          ( realToFrac <$> Diagrams.direction toEnd )
                     )
                 )
 

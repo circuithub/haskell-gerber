@@ -68,7 +68,7 @@ int =
 
 string :: Megaparsec.MonadParsec e StrictText.Text m => m StrictText.Text
 string =
-  Megaparsec.takeWhile1P Nothing isStringChar
+  Megaparsec.takeWhileP Nothing isStringChar
 
 
 newlines :: Megaparsec.MonadParsec e StrictText.Text m => m ()

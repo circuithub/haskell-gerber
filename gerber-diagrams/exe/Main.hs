@@ -115,7 +115,7 @@ mainWith CLIOptions{..} = do
   Diagrams.Backend.Cairo.renderCairo
     outputPath
     ( Diagrams.mkWidth ( scale * Diagrams.width d ) )
-    ( Diagrams.bg Diagrams.white ( Diagrams.pad 1.1 d ) )
+    ( Diagrams.bg Diagrams.white ( Diagrams.frame 1.1 d ) )
 
 
 main :: IO ()

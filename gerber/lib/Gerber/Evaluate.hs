@@ -221,7 +221,7 @@ step evaluator state = \case
             newPoint
 
         InterpolationMode.CircularCW ->
-          arc evaluator polarity apertureDefinition currentPoint center newPoint
+          arc evaluator polarity apertureDefinition newPoint center currentPoint
 
         InterpolationMode.CircularCCW ->
           arc evaluator polarity apertureDefinition currentPoint center newPoint

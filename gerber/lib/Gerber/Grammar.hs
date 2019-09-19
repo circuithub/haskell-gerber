@@ -4,7 +4,7 @@
 
 module Gerber.Grammar ( parseGerber ) where
 
-import Control.Applicative ( (<|>), many, optional, some )
+import Control.Applicative ( (<|>), empty, many, optional, some )
 import Control.Monad ( guard, void )
 import Data.Char ( digitToInt, isDigit )
 import Data.Foldable ( asum )
@@ -49,7 +49,7 @@ float = do
       ( StrictText.unpack ( intPart <> maybe "" ( "." <> ) decPart ) )
     of
       Nothing ->
-        fail "Invalid float"
+        empty
 
       Just  a->
         return a

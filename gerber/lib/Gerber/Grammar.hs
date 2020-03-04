@@ -241,7 +241,7 @@ m02 =
 g04 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 g04 =
   Gerber.G04
-    <$ ( Megaparsec.string "G04" <|> Megaparsec.string "LN" )
+    <$ ( Megaparsec.string "G04" <|> Megaparsec.string "LN" <|> Megaparsec.string "IN" )
     <*> string
     <* endOfBlock
 

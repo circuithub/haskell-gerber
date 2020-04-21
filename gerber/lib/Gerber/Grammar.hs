@@ -426,7 +426,7 @@ deprecated = do
       ]
 
   dcode <-
-    Megaparsec.try d01 <|> d02
+    Megaparsec.try d01 <|> Megaparsec.try d02 <|> d03
 
   return [ g, dcode ]
 

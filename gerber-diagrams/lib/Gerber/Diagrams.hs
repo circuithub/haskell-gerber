@@ -34,22 +34,30 @@ gerberToDiagram =
                   Diagrams.p2 end .-. Diagrams.p2 center
 
               in
-              Diagrams.translate
-                ( realToFrac <$> Diagrams.r2 center )
-                ( Diagrams.scale
-                    ( realToFrac ( Diagrams.norm toStart ) )
-                    ( if Linear.nearZero ( toStart .-. toEnd ) then
-                        Diagrams.arc'
-                          1
-                          ( realToFrac <$> Diagrams.direction toStart )
-                          ( 1 Diagrams.@@ Diagrams.turn )
 
-                      else
-                        Diagrams.arcCCW
-                          ( realToFrac <$> Diagrams.direction toStart )
-                          ( realToFrac <$> Diagrams.direction toEnd )
-                    )
-                )
+              -- diagrams crashes if the scale factor is zero. But scaling by
+              -- zero is really just an empty image, so we try and detect it and
+              -- return mempty.
+              if not ( Linear.nearZero ( Diagrams.norm toStart ) ) then
+                Diagrams.translate
+                  ( realToFrac <$> Diagrams.r2 center )
+                  ( Diagrams.scale
+                      ( realToFrac ( Diagrams.norm toStart ) )
+                      ( if Linear.nearZero ( toStart .-. toEnd ) then
+                          Diagrams.arc'
+                            1
+                            ( realToFrac <$> Diagrams.direction toStart )
+                            ( 1 Diagrams.@@ Diagrams.turn )
+
+                        else
+                          Diagrams.arcCCW
+                            ( realToFrac <$> Diagrams.direction toStart )
+                            ( realToFrac <$> Diagrams.direction toEnd )
+                      )
+                  )
+
+              else
+                mempty
 
           in
           withPolarity polarity ( strokeAperture aperture arc )

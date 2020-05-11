@@ -438,7 +438,7 @@ moveTo state to =
               take len ( digits ++ repeat 0 )
 
         ( intPart, dec ) =
-          splitAt ( Format.integerPositions fmt ) padded
+          splitAt ( length padded - Format.decimalPositions fmt ) padded
 
         sign =
           if negative then

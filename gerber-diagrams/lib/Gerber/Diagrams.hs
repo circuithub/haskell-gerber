@@ -158,14 +158,25 @@ fromEdges currentPoint ( Edge.ArcCCW center end : edges ) =
     toEnd =
       Diagrams.p2 end .-. Diagrams.p2 center
 
+    arc =
+      if Linear.nearZero ( Diagrams.p2 currentPoint .-. Diagrams.p2 end ) then
+        -- S2.12 states:
+        --
+        -- Multi quadrant mode: mode defining how circular interpolation is
+        -- performed. In this mode a circular arc is allowed to extend over more
+        -- than 90°. If the start point of the arc is equal to the end point the arc
+        -- is a full circle of 360°.
+        Diagrams.arc
+          ( realToFrac <$> Diagrams.direction toStart )
+          ( 1 Diagrams.@@ Diagrams.turn )
+
+      else
+        Diagrams.arcCCW
+          ( realToFrac <$> Diagrams.direction toStart )
+          ( realToFrac <$> Diagrams.direction toEnd )
+
   in
-  Diagrams.scale
-    ( realToFrac ( Diagrams.norm toStart ) )
-    ( Diagrams.arcCCW
-        ( realToFrac <$> Diagrams.direction toStart )
-        ( realToFrac <$> Diagrams.direction toEnd )
-    )
-    <> fromEdges end edges
+  Diagrams.scale ( realToFrac ( Diagrams.norm toStart ) ) arc <> fromEdges end edges
 
 
 

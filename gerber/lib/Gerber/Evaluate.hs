@@ -9,7 +9,7 @@ module Gerber.Evaluate where
 import Data.Char ( intToDigit )
 import GHC.Stack ( HasCallStack )
 import Data.Maybe ( fromMaybe )
-import Data.Monoid ( (<>), First(..), getLast )
+import Data.Monoid ( (<>), Dual(..), First(..), getLast )
 import Data.Monoid.Deletable ( deleteR, toDeletable, unDelete )
 
 import qualified Control.Foldl as Fold
@@ -365,7 +365,7 @@ step evaluator state = \case
       let
         close =
           case unDelete ( GraphicsState.stepRepeat state ) of
-            ( First ( Just movement ), drawing ) ->
+            ( First ( Just movement ), Dual drawing ) ->
               let
                 StepRepeat.StepRepeat{ xRepeats, yRepeats, xStep, yStep } =
                   movement
@@ -405,7 +405,7 @@ step evaluator state = \case
 
         ( _, _ ) ->
           ( mempty
-          , stateChange <> ( mempty @( GraphicsState.GraphicsState m ) ) { GraphicsState.stepRepeat = toDeletable ( mempty, drawing ) }
+          , stateChange <> ( mempty @( GraphicsState.GraphicsState m ) ) { GraphicsState.stepRepeat = toDeletable ( mempty, Dual drawing ) }
           )
 
 

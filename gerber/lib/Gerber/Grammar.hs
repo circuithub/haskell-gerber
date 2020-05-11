@@ -224,6 +224,14 @@ g71 =
     <$ Megaparsec.string "G71"
     <* endOfBlock
 
+
+g74 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
+g74 =
+  Gerber.G74
+    <$ Megaparsec.string "G74"
+    <* endOfBlock
+
+
 g75 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 g75 =
   Gerber.G75
@@ -405,6 +413,7 @@ command =
         , g36
         , g37
         , ip
+        , g74
         , g75
         , g03
         , g71
@@ -420,9 +429,9 @@ deprecated :: Megaparsec.MonadParsec e StrictText.Text m => m [Gerber.Command]
 deprecated = do
   g <-
     asum
-      [ Gerber.G01 <$ Megaparsec.string "G01"
-      , Gerber.G02 <$ Megaparsec.string "G02"
-      , Gerber.G03 <$ Megaparsec.string "G03"
+      [ Gerber.G01 <$ ( Megaparsec.string "G01" <|> Megaparsec.string "G1" )
+      , Gerber.G02 <$ ( Megaparsec.string "G02" <|> Megaparsec.string "G2" )
+      , Gerber.G03 <$ ( Megaparsec.string "G03" <|> Megaparsec.string "G3" )
       ]
 
   dcode <-

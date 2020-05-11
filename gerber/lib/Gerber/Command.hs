@@ -25,6 +25,7 @@ data Command
   | G04 !StrictText.Text
   | G36
   | G37
+  | G74
   | G75
   | G71
   | IP

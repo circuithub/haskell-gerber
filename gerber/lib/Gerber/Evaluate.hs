@@ -310,6 +310,9 @@ step evaluator state = \case
   Command.IP{} ->
     mempty
 
+  Command.G74{} ->
+    mempty
+
   Command.G75{} ->
     mempty
 

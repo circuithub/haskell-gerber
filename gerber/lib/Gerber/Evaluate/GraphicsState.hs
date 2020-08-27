@@ -3,9 +3,10 @@
 module Gerber.Evaluate.GraphicsState where
 
 import Data.Monoid ( Dual, First, Last )
+import Data.Monoid.Deletable ( Deletable )
+import Data.Sequence (Seq)
 import GHC.Generics ( Generic )
 import Generics.Deriving.Monoid ( memptydefault, mappenddefault )
-import Data.Monoid.Deletable ( Deletable )
 
 import qualified Data.IntMap.Strict as IntMap
 
@@ -29,8 +30,8 @@ data GraphicsState m = GraphicsState
   , currentPoint :: !( Last ( Float, Float ) )
   , inRegion :: !( Last Bool )
   , polarity :: !( Last Gerber.Polarity )
-  , currentContour :: Deletable ( First ( Float, Float ), [ Edge.Edge ] )
-  , stepRepeat :: Deletable ( First Gerber.StepRepeat, Dual m )
+  , currentContour :: !( Deletable ( First ( Float, Float ), Seq Edge.Edge ) )
+  , stepRepeat :: !( Deletable ( First Gerber.StepRepeat, Dual m ) )
   }
   deriving ( Generic )
 

@@ -7,10 +7,11 @@
 module Gerber.Evaluate where
 
 import Data.Char ( intToDigit )
-import GHC.Stack ( HasCallStack )
+import Data.Foldable ( toList )
 import Data.Maybe ( fromMaybe )
 import Data.Monoid ( (<>), Dual(..), First(..), getLast )
 import Data.Monoid.Deletable ( deleteR, toDeletable, unDelete )
+import GHC.Stack ( HasCallStack )
 
 import qualified Control.Foldl as Fold
 import qualified Data.IntMap.Strict as IntMap
@@ -152,33 +153,32 @@ step evaluator state = \case
         { GraphicsState.currentContour =
             toDeletable
               ( mempty
-              , [ let
-                    center =
-                      let
-                        ( dx, dy ) =
-                          offset
+              , let
+                  center =
+                    let
+                      ( dx, dy ) =
+                        offset
 
-                      in
-                      ( fst currentPoint + dx, snd currentPoint + dy )
+                    in
+                    ( fst currentPoint + dx, snd currentPoint + dy )
 
-                    currentPoint =
-                      getCurrentPoint state
+                  currentPoint =
+                    getCurrentPoint state
 
-                  in
-                  case currentInterpolationMode state of
-                    InterpolationMode.Linear ->
-                      Edge.Line newPoint
+                in
+                pure $ case currentInterpolationMode state of
+                  InterpolationMode.Linear ->
+                    Edge.Line newPoint
 
-                    InterpolationMode.CircularCW ->
-                      Edge.ArcCW
-                        center
-                        newPoint
+                  InterpolationMode.CircularCW ->
+                    Edge.ArcCW
+                      center
+                      newPoint
 
-                    InterpolationMode.CircularCCW ->
-                      Edge.ArcCCW
-                        center
-                        newPoint
-                ]
+                  InterpolationMode.CircularCCW ->
+                    Edge.ArcCCW
+                      center
+                      newPoint
               )
         , GraphicsState.currentPoint =
             pure newPoint
@@ -239,7 +239,7 @@ step evaluator state = \case
     in
     ( case unDelete ( GraphicsState.currentContour state) of
         ( First ( Just start ), edges ) ->
-          fillRegion evaluator polarity start edges
+          fillRegion evaluator polarity start (toList edges)
 
         _ ->
           error "Region finished without any edges"
@@ -298,7 +298,7 @@ step evaluator state = \case
     in
     ( case unDelete ( GraphicsState.currentContour state ) of
         ( First ( Just start ), edges ) ->
-          fillRegion evaluator polarity start edges
+          fillRegion evaluator polarity start (toList edges)
 
         _ ->
           mempty

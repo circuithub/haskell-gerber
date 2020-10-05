@@ -4,7 +4,6 @@
 
 module Gerber.Diagrams where
 
-import Data.Monoid ( (<>) )
 import Data.Typeable ( Typeable )
 import Linear.Affine ( (.-.) )
 
@@ -20,7 +19,13 @@ import qualified Linear
 gerberToDiagram
   :: Diagrams.Renderable ( Diagrams.Path Diagrams.V2 Double ) b
   => Gerber.Evaluator ( Diagrams.QDiagram b Diagrams.V2 Double Diagrams.Any )
-gerberToDiagram =
+gerberToDiagram = gerberToDiagramCustom defaultWithPolarity
+
+
+gerberToDiagramCustom
+  :: (Typeable n, RealFloat n, Diagrams.Renderable (Diagrams.Path Diagrams.V2 n) b, Diagrams.Transformable m, Fractional (Diagrams.N m), Diagrams.V m ~ Diagrams.V2)
+  => (Polarity.Polarity -> Diagrams.QDiagram b Diagrams.V2 n Diagrams.Any -> m) -> Gerber.Evaluator m
+gerberToDiagramCustom withPolarity =
   Gerber.Evaluator
     { Gerber.arc =
         \polarity aperture currentPoint center end ->
@@ -199,17 +204,17 @@ fromEdges currentPoint ( Edge.ArcCCW center end : edges ) =
 
 
 
-withPolarity
+defaultWithPolarity
   :: ( Diagrams.V c ~ Diagrams.V2
      , Floating (Diagrams.N c)
      , Typeable (Diagrams.N c)
      , Diagrams.HasStyle c
      )
   => Polarity.Polarity -> c -> c
-withPolarity Polarity.Clear =
+defaultWithPolarity Polarity.Clear =
   Diagrams.lc Diagrams.white . Diagrams.fc Diagrams.white
 
-withPolarity Polarity.Dark =
+defaultWithPolarity Polarity.Dark =
   Diagrams.lc Diagrams.black . Diagrams.fc Diagrams.black
 
 

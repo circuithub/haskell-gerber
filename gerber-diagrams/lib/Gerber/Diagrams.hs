@@ -1,6 +1,7 @@
 {-# language FlexibleContexts #-}
 {-# language GADTs #-}
 {-# language NoMonomorphismRestriction #-}
+{-# language NamedFieldPuns #-}
 
 module Gerber.Diagrams where
 
@@ -19,13 +20,15 @@ import qualified Linear
 gerberToDiagram
   :: Diagrams.Renderable ( Diagrams.Path Diagrams.V2 Double ) b
   => Gerber.Evaluator ( Diagrams.QDiagram b Diagrams.V2 Double Diagrams.Any )
-gerberToDiagram = gerberToDiagramCustom defaultWithPolarity
+gerberToDiagram = gerberToDiagramCustom defaultConfig
+
+
 
 
 gerberToDiagramCustom
-  :: (Typeable n, RealFloat n, Diagrams.Renderable (Diagrams.Path Diagrams.V2 n) b, Diagrams.Transformable m, Fractional (Diagrams.N m), Diagrams.V m ~ Diagrams.V2)
-  => (Polarity.Polarity -> Diagrams.QDiagram b Diagrams.V2 n Diagrams.Any -> m) -> Gerber.Evaluator m
-gerberToDiagramCustom withPolarity =
+  :: Diagrams.Renderable ( Diagrams.Path Diagrams.V2 Double ) b
+  => Config -> Gerber.Evaluator ( Diagrams.QDiagram b Diagrams.V2 Double Diagrams.Any )
+gerberToDiagramCustom config =
   Gerber.Evaluator
     { Gerber.arc =
         \polarity aperture currentPoint center end ->
@@ -65,7 +68,7 @@ gerberToDiagramCustom withPolarity =
                 mempty
 
           in
-          withPolarity polarity ( strokeAperture aperture arc )
+          withPolarity config polarity ( strokeAperture aperture arc )
     , Gerber.line =
         \polarity aperture (x1, y1) (x2, y2) ->
           let
@@ -76,10 +79,11 @@ gerberToDiagramCustom withPolarity =
                 )
 
           in
-          withPolarity polarity ( strokeAperture aperture trail )
+          withPolarity config polarity ( strokeAperture aperture trail )
     , Gerber.flash =
         \polarity aperture (x, y) ->
           withPolarity
+            config
             polarity
             ( Diagrams.lw Diagrams.none $
               Diagrams.translate ( realToFrac <$> Diagrams.V2 x y ) $
@@ -110,6 +114,7 @@ gerberToDiagramCustom withPolarity =
     , Gerber.fillRegion =
         \polarity start edges ->
           withPolarity
+            config
             polarity
             ( Diagrams.lw Diagrams.none $ Diagrams.strokeLocLoop
                 ( Diagrams.at
@@ -203,19 +208,30 @@ fromEdges currentPoint ( Edge.ArcCCW center end : edges ) =
     Diagrams.scale ( realToFrac ( Diagrams.norm toStart ) ) arc <> fromEdges end edges
 
 
+data Config = Config
+  { clearColour :: Diagrams.Colour Double
+  , darkColour :: Diagrams.Colour Double
+  }
 
-defaultWithPolarity
+defaultConfig :: Config
+defaultConfig =
+  Config
+    { clearColour = Diagrams.white
+    , darkColour = Diagrams.black
+    }
+
+withPolarity
   :: ( Diagrams.V c ~ Diagrams.V2
      , Floating (Diagrams.N c)
      , Typeable (Diagrams.N c)
      , Diagrams.HasStyle c
      )
-  => Polarity.Polarity -> c -> c
-defaultWithPolarity Polarity.Clear =
-  Diagrams.lc Diagrams.white . Diagrams.fc Diagrams.white
+  => Config -> Polarity.Polarity -> c -> c
+withPolarity Config{clearColour} Polarity.Clear =
+  Diagrams.lc Diagrams.white . Diagrams.fc clearColour
 
-defaultWithPolarity Polarity.Dark =
-  Diagrams.lc Diagrams.black . Diagrams.fc Diagrams.black
+withPolarity Config{darkColour} Polarity.Dark =
+  Diagrams.lc darkColour . Diagrams.fc darkColour
 
 
 strokeAperture

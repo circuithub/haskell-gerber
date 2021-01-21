@@ -11,6 +11,16 @@ cabal-version:       >= 2.0
 
 library
   exposed-modules:     Gerber.ApertureDefinition
+                       Gerber.Attribute
+                       Gerber.Attribute.Attribute
+                       Gerber.Attribute.CreationDate
+                       Gerber.Attribute.FileFunction
+                       Gerber.Attribute.FileFunction.Copper
+                       Gerber.Attribute.FileFunction.Drill
+                       Gerber.Attribute.FileFunction.Types
+                       Gerber.Attribute.FilePolarity
+                       Gerber.Attribute.GenerationSoftware
+                       Gerber.Attribute.Part
                        Gerber.Command
                        Gerber.DCodeNumber
                        Gerber.EncodedDecimal
@@ -27,12 +37,16 @@ library
                        Gerber.StepRepeat
                        Gerber.Unit
   build-depends:       base ^>= 4.12 || ^>= 4.13 || ^>= 4.14
-                     , megaparsec ^>= 7.0
-                     , text >=1.2 && <1.3
-                     , generic-deriving
+                     , base16-bytestring < 1
+                     , bytestring
                      , containers
-                     , monoid-extras
                      , foldl
+                     , generic-deriving
+                     , megaparsec ^>= 7.0
+                     , monoid-extras
+                     , text >=1.2 && <1.3
+                     , time
+                     , uuid-types
   hs-source-dirs:      lib
   default-language:    Haskell2010
   ghc-options:         -Wall

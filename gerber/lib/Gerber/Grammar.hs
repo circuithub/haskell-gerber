@@ -6,17 +6,20 @@ module Gerber.Grammar ( parseGerber ) where
 
 import Control.Applicative ( (<|>), empty, many, optional, some )
 import Control.Monad ( guard, void )
-import Data.Char ( digitToInt, isDigit )
+import Data.Char ( digitToInt, isAsciiLower, isAsciiUpper, isDigit )
 import Data.Foldable ( asum )
 import Data.Monoid ( (<>) )
 import Data.Void ( Void )
-import Text.Megaparsec ( (<?>) )
 import Text.Read ( readMaybe )
 
+import Data.Text ( Text )
 import qualified Data.Text as StrictText
+import Text.Megaparsec ( MonadParsec, (<?>) )
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as Megaparsec
 
+import Gerber.Attribute ( parseFileAttribute )
+import Gerber.Attribute.Attribute ( Attribute( Attribute ) )
 import qualified Gerber.Padding as Padding
 import qualified Gerber.ApertureDefinition as Gerber
 import qualified Gerber.Command as Gerber
@@ -66,9 +69,52 @@ int =
   read . StrictText.unpack <$> Megaparsec.takeWhile1P Nothing isDigit
 
 
-string :: Megaparsec.MonadParsec e StrictText.Text m => m StrictText.Text
-string =
-  Megaparsec.takeWhileP Nothing isStringChar
+-- Name = [a-zA-Z_.$]{[a-zA-Z_.0-9]+}
+--
+-- (from §3.6.6 of Gerber File Format Specification)
+name :: MonadParsec e Text m => m Text
+name = go <?> "name"
+  where
+    alpha c = isAsciiUpper c || isAsciiLower c
+    isNameHeadChar c = alpha c || elem c ['_', '-', '$']
+    isNameTailChar c = alpha c || isDigit c || elem c ['_', '-']
+    go = StrictText.cons
+      <$> Megaparsec.satisfy isNameHeadChar
+      <*> Megaparsec.takeWhileP Nothing isNameTailChar
+
+
+-- String = [a-zA-Z0-9_+-/!?<>”’(){}.\|&@# ,;$:=]+
+--
+-- (from §3.6.6 of Gerber File Format Specification)
+string :: MonadParsec e Text m => m Text
+string = Megaparsec.takeWhileP Nothing isStringChar <?> "string"
+
+
+isStringChar :: Char -> Bool
+isStringChar c =
+  isAsciiLower c ||
+  isAsciiUpper c ||
+  isDigit c ||
+  elem c
+    [ '_', '+', '-', '/', '!', '?', '<', '>', '"', '\'', '(', ')', '{', '}'
+    , '.', '\\', '|', '&', '@', '#', ' ', ',', ';', '$', ':', '='
+    ]
+
+
+-- String = [a-zA-Z0-9_+-/!?<>”’(){}.\|&@# ,;$:=]+
+--
+-- (from §3.6.6 of Gerber File Format Specification)
+field :: MonadParsec e Text m => m Text
+field = Megaparsec.takeWhileP Nothing isFieldChar <?> "field"
+
+
+-- As defined by § 5.1.1 of Gerber File Format Specification
+isFieldChar :: Char -> Bool
+isFieldChar c = isStringChar c && c /= ','
+
+
+attribute :: MonadParsec e Text m => m Attribute
+attribute = Attribute <$> name <*> many (Megaparsec.char ',' *> field)
 
 
 newlines :: Megaparsec.MonadParsec e StrictText.Text m => m ()
@@ -173,7 +219,7 @@ ad = do
 
     macro =
       Gerber.Macro
-        <$> Megaparsec.takeWhile1P Nothing ( /= '*' )
+        <$> name
 
 
   Gerber.AD
@@ -396,7 +442,16 @@ ip =
       <* endOfBlock
 
 
-command :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
+tf :: (MonadFail m, MonadParsec e Text m) => m Gerber.Command
+tf =
+    Gerber.TF
+      <$ Megaparsec.string "TF"
+      <*> (attribute >>= parseFileAttribute)
+      <* endOfBlock
+
+
+command :: (MonadFail m, Megaparsec.MonadParsec e StrictText.Text m)
+  => m Gerber.Command
 command =
   asum
     ( map Megaparsec.try
@@ -422,6 +477,7 @@ command =
         , sr
         , sf
         , mi
+        , tf
         ]
     )
 
@@ -448,12 +504,12 @@ extended parser =
     <* newlines
 
 
-commands :: Megaparsec.MonadParsec e StrictText.Text m => m [ Gerber.Command ]
+commands :: (MonadFail m, MonadParsec e Text m) => m [ Gerber.Command ]
 commands =
   some command <|> deprecated
 
 
-gerberFile :: Megaparsec.MonadParsec Void StrictText.Text m => m [ Gerber.Command ]
+gerberFile :: (MonadFail m, MonadParsec Void Text m) => m [ Gerber.Command ]
 gerberFile =
   snoc
     <$> ( concat
@@ -467,11 +523,6 @@ gerberFile =
 
     snoc xs x =
       xs ++ [x]
-
-
-isStringChar :: Char -> Bool
-isStringChar c =
-  c `notElem` ( "\n\r%*" :: String )
 
 
 parseGerber

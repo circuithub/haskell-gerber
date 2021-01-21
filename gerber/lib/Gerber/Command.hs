@@ -3,6 +3,7 @@ module Gerber.Command where
 import qualified Data.Text as StrictText
 
 import Gerber.ApertureDefinition ( ApertureDefinition )
+import Gerber.Attribute ( FileAttribute )
 import Gerber.DCodeNumber ( DCodeNumber )
 import Gerber.Format ( Format )
 import Gerber.Movement ( Movement )
@@ -37,4 +38,5 @@ data Command
   | M02
   | SF
   | MI
+  | TF !FileAttribute
   deriving ( Eq, Show )

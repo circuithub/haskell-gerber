@@ -1,0 +1,155 @@
+[ G04 " Ucamco copyright"
+, IngoredAttributeTF
+    "GenerationSoftware,Ucamco,UcamX,2016.04-160425"
+, IngoredAttributeTF "CreationDate,2016-04-25T00:00:00+01:00"
+, FS
+    PadLeading
+    Format { integerPositions = 2 , decimalPositions = 6 }
+    Format { integerPositions = 2 , decimalPositions = 6 }
+, MO MM
+, AD
+    10
+    (Circle
+       CircleModifiers { diameter = 1.0 , circleHoleDiameter = Nothing })
+, LP Dark
+, G04 " Define block aperture D12"
+, AB 12
+, AD
+    11
+    (Circle
+       CircleModifiers { diameter = 0.5 , circleHoleDiameter = Nothing })
+, D 10
+, G01
+, D03
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = True , digits = [ 2 , 5 , 0 , 0 , 0 , 0 , 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = True , digits = [ 1 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D03
+    Movement
+      { x = Nothing
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 1 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, LP Clear
+, D 11
+, D03
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = True , digits = [ 2 , 5 , 0 , 0 , 0 , 0 , 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = True , digits = [ 1 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, LP Dark
+, D02
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = True , digits = [ 5 , 0 , 0 , 0 , 0 , 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = True , digits = [ 1 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D01
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 2 , 5 , 0 , 0 , 0 , 0 , 0 ] }
+      , y = Nothing
+      , i = Nothing
+      , j = Nothing
+      }
+, G75
+, G03
+, D01
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 5 , 0 , 0 , 0 , 0 , 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 1 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , i =
+          Just
+            EncodedDecimal
+              { negative = True , digits = [ 2 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , j = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      }
+, G01
+, AB_End
+, G04 " Flash block aperture D12 in four different orientation"
+, D 12
+, D03
+    Movement
+      { x = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, LM MirrorX
+, D03
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , y = Nothing
+      , i = Nothing
+      , j = Nothing
+      }
+, LM MirrorY
+, LR 30.0
+, D03
+    Movement
+      { x = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 8 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, LM MirrorXY
+, LR 45.0
+, LS 0.8
+, D03
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , y = Nothing
+      , i = Nothing
+      , j = Nothing
+      }
+, LP Dark
+, LM MirrorNone
+, LR 0.0
+, LS 1.0
+, M02
+]

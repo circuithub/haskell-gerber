@@ -1,13 +1,10 @@
 module Gerber.ApertureDefinition where
 
-import qualified Data.Text as StrictText
-
 
 data ApertureDefinition
   = Circle !CircleModifiers
   | Rectangle !RectangleModifiers
   | Obround !RectangleModifiers
-  | Macro !StrictText.Text
   | Polygon !PolygonModifiers
   deriving ( Eq, Show )
 

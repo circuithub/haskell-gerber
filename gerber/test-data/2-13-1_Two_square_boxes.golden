@@ -1,0 +1,105 @@
+[ G04 " Ucamco ex. 1: Two square boxes"
+, FS
+    PadLeading
+    Format { integerPositions = 2 , decimalPositions = 6 }
+    Format { integerPositions = 2 , decimalPositions = 6 }
+, MO MM
+, IngoredAttributeTF "Part,Other,example"
+, LP Dark
+, AD
+    10
+    (Circle
+       CircleModifiers
+         { diameter = 1.0e-2 , circleHoleDiameter = Nothing })
+, D 10
+, D02
+    Movement
+      { x = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, G01
+, D01
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 5 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D01
+    Movement
+      { x = Nothing
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 5 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D01
+    Movement
+      { x = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , y = Nothing
+      , i = Nothing
+      , j = Nothing
+      }
+, D01
+    Movement
+      { x = Nothing
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D02
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 6 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , y = Nothing
+      , i = Nothing
+      , j = Nothing
+      }
+, D01
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 1 , 1 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , y = Nothing
+      , i = Nothing
+      , j = Nothing
+      }
+, D01
+    Movement
+      { x = Nothing
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 5 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D01
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 6 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , y = Nothing
+      , i = Nothing
+      , j = Nothing
+      }
+, D01
+    Movement
+      { x = Nothing
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, M02
+]

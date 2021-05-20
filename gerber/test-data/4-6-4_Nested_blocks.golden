@@ -1,0 +1,336 @@
+[ G04 " Ucamco copyright"
+, IngoredAttributeTF
+    "GenerationSoftware,Ucamco,UcamX,2016.04-160425"
+, IngoredAttributeTF "CreationDate,2016-04-25T00:00:00+01:00"
+, FS
+    PadLeading
+    Format { integerPositions = 4 , decimalPositions = 6 }
+    Format { integerPositions = 4 , decimalPositions = 6 }
+, MO MM
+, G04 " Define standard apertures"
+, AD
+    10
+    (Circle
+       CircleModifiers { diameter = 7.5 , circleHoleDiameter = Nothing })
+, AD
+    11
+    (Circle
+       CircleModifiers { diameter = 15.0 , circleHoleDiameter = Nothing })
+, AD
+    12
+    (Rectangle
+       RectangleModifiers
+         { width = 20.0 , height = 10.0 , rectangleHoleDiameter = Nothing })
+, AD
+    13
+    (Rectangle
+       RectangleModifiers
+         { width = 10.0 , height = 20.0 , rectangleHoleDiameter = Nothing })
+, G04
+    " Define block aperture D100, consisting of two draws and a round dot"
+, AB 100
+, D 10
+, D02
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 6 , 5 , 5 , 3 , 2 , 0 , 0 , 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 1 , 7 , 6 , 0 , 5 , 3 , 7 , 5 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D01
+    Movement
+      { x = Nothing
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 6 , 5 , 8 , 6 , 5 , 3 , 7 , 5 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D01
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = True , digits = [ 3 , 5 , 5 , 6 , 0 , 0 , 0 ] }
+      , y = Nothing
+      , i = Nothing
+      , j = Nothing
+      }
+, D 11
+, D03
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = True , digits = [ 3 , 5 , 5 , 6 , 0 , 0 , 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 1 , 7 , 6 , 0 , 5 , 3 , 7 , 5 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, AB_End
+, G04
+    " Define block aperture  D102, consisting of 2x3 flashes of D101 and 1 flash of D12"
+, AB 102
+, G04
+    " Define nested block aperture D101, consisting of 2x2 flashes of D100"
+, AB 101
+, D 100
+, D03
+    Movement
+      { x = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D03
+    Movement
+      { x = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 7 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D03
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False
+              , digits = [ 1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ]
+              }
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D03
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False
+              , digits = [ 1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ]
+              }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 7 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, AB_End
+, D 101
+, D03
+    Movement
+      { x = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D03
+    Movement
+      { x = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False
+              , digits = [ 1 , 6 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ]
+              }
+      , i = Nothing
+      , j = Nothing
+      }
+, D03
+    Movement
+      { x = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False
+              , digits = [ 3 , 2 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ]
+              }
+      , i = Nothing
+      , j = Nothing
+      }
+, D03
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False
+              , digits = [ 2 , 3 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ]
+              }
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D03
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False
+              , digits = [ 2 , 3 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ]
+              }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False
+              , digits = [ 1 , 6 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ]
+              }
+      , i = Nothing
+      , j = Nothing
+      }
+, D03
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False
+              , digits = [ 2 , 3 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ]
+              }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False
+              , digits = [ 3 , 2 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ]
+              }
+      , i = Nothing
+      , j = Nothing
+      }
+, D 12
+, D03
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 1 , 9 , 5 , 0 , 0 , 0 , 0 , 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = True , digits = [ 1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, AB_End
+, G04 " Flash D13 twice outside of blocks"
+, D 13
+, D03
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = True , digits = [ 3 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D03
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False
+              , digits = [ 1 , 4 , 3 , 0 , 0 , 0 , 0 , 0 , 0 ]
+              }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = True , digits = [ 3 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, G04 " Flash block D102 3x2 times"
+, D 102
+, D03
+    Movement
+      { x = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D03
+    Movement
+      { x = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False
+              , digits = [ 5 , 2 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ]
+              }
+      , i = Nothing
+      , j = Nothing
+      }
+, D03
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False
+              , digits = [ 5 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ]
+              }
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D03
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False
+              , digits = [ 5 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ]
+              }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False
+              , digits = [ 5 , 2 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ]
+              }
+      , i = Nothing
+      , j = Nothing
+      }
+, D03
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False
+              , digits = [ 1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ]
+              }
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D03
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False
+              , digits = [ 1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ]
+              }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False
+              , digits = [ 5 , 2 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ]
+              }
+      , i = Nothing
+      , j = Nothing
+      }
+, M02
+]

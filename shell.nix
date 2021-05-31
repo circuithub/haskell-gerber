@@ -1,4 +1,8 @@
-{ pkgs ? import <nixpkgs> { }, compiler ? "default" }:
+{ pkgs ? import <nixpkgs> {
+    config = { allowBroken = true; };
+  }
+, compiler ? "default"
+}:
 let
   haskellPackages =
     if compiler == "default"

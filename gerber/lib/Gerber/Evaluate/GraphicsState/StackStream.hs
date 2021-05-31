@@ -1,6 +1,7 @@
 {-# language ScopedTypeVariables #-}
 {-# language RankNTypes #-}
 {-# language GeneralizedNewtypeDeriving #-}
+{-# language LambdaCase #-}
 
 module Gerber.Evaluate.GraphicsState.StackStream
   ( StackStream
@@ -9,6 +10,7 @@ module Gerber.Evaluate.GraphicsState.StackStream
   , pop
   , top
   , null
+  , toLists
   ) where
 
 import Data.Monoid
@@ -25,6 +27,16 @@ data StackStream stackId streamElem
   | Pop (StackStream stackId streamElem)
   | Add (Endo [streamElem])
 
+instance (Eq stackId, Eq streamElem) => Eq (StackStream stackId streamElem) where
+  -- | Equality is defined in terms of 'toLists'
+  a == b = toLists a == toLists b
+
+instance (Show stackId, Show streamElem) => Show (StackStream stackId streamElem) where
+  show = \case
+    Empty -> "Empty"
+    Push stackId es rest -> "Push ( " ++ show stackId ++ " ) " ++ show (appEndo es []) ++ "( " ++ show rest ++ " )"
+    Pop rest -> "Pop ( " ++ show rest ++ " ) "
+    Add es -> "Add " ++ show (appEndo es [])
 
 instance Semigroup (StackStream stackId streamElem) where
   Empty                        <> rhs                          = rhs -- 4
@@ -42,6 +54,7 @@ instance Semigroup (StackStream stackId streamElem) where
 
 instance Monoid (StackStream stackId streamElem) where
   mempty = Empty
+
 
 -- | Push a new element stream with the provided name onto the stack.
 push :: stackId -> StackStream stackId streamElem
@@ -69,3 +82,10 @@ null Empty = True
 null (Pop _) = True
 null (Add _) = True
 null (Push _ _ _) = False
+
+-- | Convert the stack stream to a list of lists (equality is defined with respect to this operation).
+toLists :: StackStream stackId streamElem -> [(stackId, [streamElem])]
+toLists a =
+  case top a of
+    Just x -> x : toLists (a <> pop)
+    Nothing -> []

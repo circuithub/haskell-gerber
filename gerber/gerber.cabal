@@ -64,6 +64,9 @@ test-suite tests
                      , tasty-golden
                      , pretty-show
                      , directory
+                     , tasty-hedgehog
+                     , hedgehog-classes
+                     , hedgehog
                      , bytestring
 
   main-is:             Main.hs
@@ -71,4 +74,5 @@ test-suite tests
   type:                exitcode-stdio-1.0
   default-language:    Haskell2010
   other-modules:       Gerber.Grammar.Tests
-  ghc-options:         -Wall
+                       Gerber.Evaluate.GraphicsState.StackStream.Tests
+  Ghc-options:         -Wall

@@ -7,6 +7,7 @@ import System.Directory ( doesDirectoryExist, setCurrentDirectory )
 import qualified Test.Tasty
 
 import qualified Gerber.Grammar.Tests
+import qualified Gerber.Evaluate.GraphicsState.StackStream.Tests
 
 main :: IO ()
 main = do
@@ -34,4 +35,5 @@ tests =
   Test.Tasty.testGroup
     "gerber tests"
     [ Gerber.Grammar.Tests.tests
+    , Gerber.Evaluate.GraphicsState.StackStream.Tests.tests
     ]

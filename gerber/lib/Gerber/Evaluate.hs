@@ -693,6 +693,9 @@ lookupEvalMacroInMM state name arguments = catMaybes $ evalState (traverse go co
       MacroDefinition.Primitive a ->
         Just <$> (traverse evalExpresion a >>= determineExposure . coordinatesToMM)
 
+      MacroDefinition.InvalidDefinition _ _ ->
+        pure $ Nothing
+
       where
         determineExposure
           :: HasCallStack

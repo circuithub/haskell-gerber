@@ -379,6 +379,7 @@ am = Gerber.AM
         , MacroDefinition.Primitive . MacroDefinition.Polygon <$> polygon
         , MacroDefinition.Primitive . MacroDefinition.Moire <$> moire
         , MacroDefinition.Primitive . MacroDefinition.Thermal <$> thermal
+        , invalidDefinition
         ]
       where
 
@@ -465,6 +466,12 @@ am = Gerber.AM
             <*> ( modifier <* comma )
             <*> ( modifier <* comma )
             <*> modifier
+
+        invalidDefinition :: m ( MacroDefinition.Definition MacroDefinition.Modifier MacroDefinition.Modifier )
+        invalidDefinition =
+          MacroDefinition.InvalidDefinition
+            <$> ((Megaparsec.decimal >>= \a -> guard  (a `notElem` [0, 1, 4, 5, 7, 6, 20, 21 ] ) >> pure a) <* comma)
+            <*> (Megaparsec.takeWhileP Nothing (/= '*') )
 
         modifier :: m ( MacroDefinition.Modifier )
         modifier = fixAssociation <$> unaryOrBinaryModifier

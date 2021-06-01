@@ -24,6 +24,7 @@ tests =  testGroup "Gerber.Grammar.Tests"
   , mkGolden "SMD_prim_21_X1"
   , mkGolden "sample-1-stencil-top-panelised"
   , mkGolden "sample-2-copper-top-panelised"
+  , mkGolden "sample-3-panel-outline"
   ]
   where
     mkGolden example = goldenVsStringDiff example differ ( "test-data/" ++ example ++ ".golden" ) parser

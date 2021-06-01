@@ -28,6 +28,7 @@ data Definition exposure a
   = Variable !Int !a
   | Comment !Text
   | Primitive !(Primitive exposure a)
+  | InvalidDefinition !Int Text
   deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
 
 data Primitive exposure a

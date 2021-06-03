@@ -4,17 +4,24 @@
 {-# language TypeApplications #-}
 {-# language ScopedTypeVariables #-}
 
-module Gerber.Evaluate where
+module Gerber.Evaluate
+  ( Evaluator(..)
+  , evaluate
+  )where
 
+import Control.Monad.State hiding (state)
 import Data.Char ( intToDigit )
 import Data.Foldable ( toList )
-import Data.Maybe ( fromMaybe )
-import Data.Monoid ( (<>), Dual(..), First(..), getLast )
+import Data.Maybe ( fromMaybe, catMaybes )
+import Data.Monoid ( Dual(..), First(..), getLast )
 import Data.Monoid.Deletable ( deleteR, toDeletable, unDelete )
+import Data.Text ( Text )
 import GHC.Stack ( HasCallStack )
 
 import qualified Control.Foldl as Fold
 import qualified Data.IntMap.Strict as IntMap
+import qualified Data.Map.Strict as Map
+import qualified Data.Text as Text
 
 import qualified Gerber.ApertureDefinition as ApertureDefinition
 import qualified Gerber.Command as Command
@@ -22,8 +29,12 @@ import qualified Gerber.DCodeNumber as DCodeNumber
 import qualified Gerber.EncodedDecimal as EncodedDecimal
 import qualified Gerber.Evaluate.Edge as Edge
 import qualified Gerber.Evaluate.GraphicsState as GraphicsState
+import qualified Gerber.Evaluate.GraphicsState.ApertureEntry as ApertureEntry
 import qualified Gerber.Evaluate.GraphicsState.InterpolationMode as InterpolationMode
+import qualified Gerber.Evaluate.GraphicsState.StackStream as StackStream
 import qualified Gerber.Format as Format
+import qualified Gerber.MacroDefinition as MacroDefinition
+import qualified Gerber.Mirroring as Mirroring
 import qualified Gerber.Movement as Movement
 import qualified Gerber.Padding as Padding
 import qualified Gerber.Polarity as Polarity
@@ -41,7 +52,10 @@ data Evaluator m = Evaluator
   , flash ::
       Polarity.Polarity
         -> ApertureDefinition.ApertureDefinition
-        -> (Float, Float)
+        -> m
+  , flashMacro ::
+      Polarity.Polarity
+        -> [MacroDefinition.Primitive MacroDefinition.Exposure Float]
         -> m
   , fillRegion ::
       Polarity.Polarity
@@ -60,11 +74,17 @@ data Evaluator m = Evaluator
         -> Float
         -> m
         -> m
+  , mirror :: Mirroring.Mirroring -> m -> m
+  , rotate :: Float -> m -> m
+  , scale :: Float -> m -> m
   }
 
 
 evaluate :: Monoid m => Evaluator m -> Fold.Fold Command.Command m
-evaluate evaluator =
+evaluate = evaluate' GraphicsState.initialGraphicsState
+
+evaluate' :: Monoid m => GraphicsState.GraphicsState m -> Evaluator m -> Fold.Fold Command.Command m
+evaluate' initialStatue evaluator =
   Fold.Fold
     ( \( drawing, state) command ->
         let
@@ -74,7 +94,7 @@ evaluate evaluator =
         in
         ( d <> drawing, state <> s )
     )
-    ( mempty, GraphicsState.initialGraphicsState )
+    ( mempty, initialStatue )
     fst
 
 
@@ -85,7 +105,21 @@ step
   -> GraphicsState.GraphicsState m
   -> Command.Command
   -> ( m, GraphicsState.GraphicsState m )
-step evaluator state = \case
+step evaluator state
+  | not ( StackStream.null ( GraphicsState.blockApertureStack state ) ) = \command ->
+      case command of
+        Command.AB a ->
+          abStart a
+
+        Command.AB_End ->
+          abEnd
+
+        _ ->
+          ( mempty
+          , mempty { GraphicsState.blockApertureStack = StackStream.add command }
+          )
+
+  | otherwise = \case
   Command.FS padding xfmt yfmt ->
     ( mempty
     , mempty { GraphicsState.coordinateSystem = pure ( padding, xfmt, yfmt ) }
@@ -116,14 +150,31 @@ step evaluator state = \case
           ApertureDefinition.Obround params ->
             ApertureDefinition.Obround ( scaleRectParams params )
 
-          -- TODO
-          other ->
-            other
+
+          ApertureDefinition.Polygon params ->
+            ApertureDefinition.Polygon
+              params
+                { ApertureDefinition.outerDiameter =
+                    toMM state ( ApertureDefinition.outerDiameter params )
+                , ApertureDefinition.rotation =
+                    toMM state <$> ( ApertureDefinition.rotation params )
+                , ApertureDefinition.polygonHoleDiameter =
+                    toMM state <$> ( ApertureDefinition.polygonHoleDiameter params )
+                }
 
     in
     ( mempty
     , mempty
-        { GraphicsState.apertureDictionary = IntMap.singleton n defInMM }
+        { GraphicsState.apertureDictionary = IntMap.singleton n ( ApertureEntry.BasicAperture defInMM ) }
+    )
+
+  Command.MacroAD ( DCodeNumber.DCodeNumber n ) name arguments ->
+    let
+      prim = lookupEvalMacroInMM state name arguments
+    in
+    ( mempty
+    , mempty
+        { GraphicsState.apertureDictionary = IntMap.singleton n ( ApertureEntry.MacroAperture prim ) }
     )
 
   Command.D n ->
@@ -186,47 +237,52 @@ step evaluator state = \case
     )
 
   Command.D01 to | otherwise -> drawToImageOrStepRepeat $
-    let
-      interp =
-        currentInterpolationMode state
+    case  currentAperture state of
+      ApertureEntry.MacroAperture _ ->
+        mempty
 
-      ( newPoint, offset ) =
-        moveTo state to
+      ApertureEntry.BlockAperture _ ->
+        mempty
 
-      apertureDefinition =
-        currentAperture state
-
-      polarity =
-        currentPolarity state
-
-      currentPoint =
-        getCurrentPoint state
-
-      center =
+      ApertureEntry.BasicAperture apertureDefinition ->
         let
-          ( dx, dy ) =
-            offset
+          interp =
+            currentInterpolationMode state
+
+          ( newPoint, offset ) =
+            moveTo state to
+
+          polarity =
+            currentPolarity state
+
+          currentPoint =
+            getCurrentPoint state
+
+          center =
+            let
+              ( dx, dy ) =
+                offset
+
+            in
+            ( fst currentPoint + dx, snd currentPoint + dy )
 
         in
-        ( fst currentPoint + dx, snd currentPoint + dy )
+        ( case interp of
+            InterpolationMode.Linear ->
+              line
+                evaluator
+                polarity
+                apertureDefinition
+                currentPoint
+                newPoint
 
-    in
-    ( case interp of
-        InterpolationMode.Linear ->
-          line
-            evaluator
-            polarity
-            apertureDefinition
-            currentPoint
-            newPoint
+            InterpolationMode.CircularCW ->
+              arc evaluator polarity apertureDefinition newPoint center currentPoint
 
-        InterpolationMode.CircularCW ->
-          arc evaluator polarity apertureDefinition newPoint center currentPoint
-
-        InterpolationMode.CircularCCW ->
-          arc evaluator polarity apertureDefinition currentPoint center newPoint
-    , mempty { GraphicsState.currentPoint = pure newPoint }
-    )
+            InterpolationMode.CircularCCW ->
+              arc evaluator polarity apertureDefinition currentPoint center newPoint
+        , mempty { GraphicsState.currentPoint = pure newPoint }
+        )
 
   Command.D02 to | inRegion state ->
     let
@@ -274,8 +330,51 @@ step evaluator state = \case
       polarity =
         currentPolarity state
 
+      transform = applyTranslation . applyRotation . applyMirror . applyScale
+        where
+          applyScale = maybe id ( scale evaluator ) ( getLast ( GraphicsState.scale state ) )
+
+          applyMirror = maybe id ( mirror evaluator ) ( getLast ( GraphicsState.mirror state ) )
+
+          applyRotation = maybe id ( rotate evaluator ) ( getLast ( GraphicsState.rotate state ) )
+
+          applyTranslation = uncurry ( translate evaluator ) newPoint
+
+      drawing' =
+        transform $
+        case apertureDefinition of
+          ApertureEntry.BasicAperture a ->
+            flash evaluator polarity a
+
+          ApertureEntry.MacroAperture a ->
+            flashMacro evaluator polarity a
+
+          ApertureEntry.BlockAperture commands ->
+              -- From the specification section 4.6.1
+              --
+              -- If the polarity is dark (LPD) when the block is flashed then the block aperture is inserted as is. If
+              -- the polarity is clear (LPC) then the polarity of all objects in the block is toggled (clear becomes
+              -- dark, and dark becomes clear). This toggle propagates through all nesting levels.
+              let commands'
+                    | currentPolarity_ == Just Polarity.Clear = map flipPolarity commands
+                    | otherwise = commands
+
+                  currentPolarity_ = getLast ( GraphicsState.polarity state )
+
+                  flipPolarity = \case
+                    Command.LP Polarity.Dark ->
+                      Command.LP Polarity.Clear
+
+                    Command.LP Polarity.Clear ->
+                      Command.LP Polarity.Dark
+
+                    a -> a
+              in
+              Fold.fold ( evaluate' state evaluator ) commands'
+
+
     in
-    ( flash evaluator polarity apertureDefinition newPoint
+    ( drawing'
     , mempty { GraphicsState.currentPoint = pure newPoint }
     )
 
@@ -340,14 +439,23 @@ step evaluator state = \case
   Command.OF ( Just 0 ) ( Just 0 ) ->
     mempty
 
-  Command.AM ->
-    mempty
+  Command.AM name definition ->
+      ( mempty
+      , ( mempty @( GraphicsState.GraphicsState m ) )
+        { GraphicsState.macroDictionary = Map.singleton name definition }
+      )
 
   Command.SR movement ->
     flushSR
       ( mempty
       , ( mempty @( GraphicsState.GraphicsState m ) )
         { GraphicsState.stepRepeat = deleteR <> toDeletable ( pure movement, mempty ) }
+      )
+  Command.SR_End ->
+    flushSR
+      ( mempty
+      , ( mempty @( GraphicsState.GraphicsState m ) )
+        { GraphicsState.stepRepeat = deleteR <> toDeletable ( mempty, mempty ) }
       )
 
   Command.M02 ->
@@ -359,10 +467,66 @@ step evaluator state = \case
   Command.MI ->
     mempty
 
-  cmd ->
-    error ( show cmd )
+  Command.AB a ->
+    abStart a
+
+  Command.AB_End ->
+    abEnd
+
+  Command.LM a ->
+    ( mempty
+    , mempty { GraphicsState.mirror = pure a }
+    )
+
+  Command.LS a ->
+    ( mempty
+    , mempty { GraphicsState.scale = pure a }
+    )
+
+  Command.LR a ->
+    ( mempty
+    , mempty { GraphicsState.rotate = pure a }
+    )
+
+  Command.IngoredAttributeTF _ ->
+    -- Non graphics affecting meta information
+    mempty
+
+  Command.IngoredAttributeTA _ ->
+    -- Non graphics affecting meta information
+    mempty
+
+  Command.IngoredAttributeTO _ ->
+    -- Non graphics affecting meta information
+    mempty
+
+  Command.IngoredAttributeTD _ ->
+    -- Non graphics affecting meta information
+    mempty
+
+  Command.OF _ _ ->
+    -- From the specification section 7.1.8
+    error "Unsupported command. The OF command is deprecated since revision I1 from December 2012."
 
   where
+
+    abStart a =
+      ( mempty
+      , mempty { GraphicsState.blockApertureStack = StackStream.push a }
+      )
+
+    abEnd =
+      case StackStream.top (GraphicsState.blockApertureStack state) of
+        Nothing ->
+          error "unbalanced aperture block start and end"
+
+        Just (DCodeNumber.DCodeNumber apertureId, commands) ->
+          ( mempty
+          , mempty
+              { GraphicsState.apertureDictionary = IntMap.singleton apertureId (ApertureEntry.BlockAperture commands)
+              , GraphicsState.blockApertureStack = StackStream.pop
+              }
+          )
 
     flushSR =
       let
@@ -399,7 +563,6 @@ step evaluator state = \case
 
       in
       mappend close
-
 
     drawToImageOrStepRepeat ( drawing, stateChange ) =
       case unDelete ( GraphicsState.stepRepeat state ) of
@@ -499,10 +662,133 @@ toMM state x =
     Unit.IN ->
       x * 25.4
 
+lookupEvalMacroInMM :: HasCallStack => GraphicsState.GraphicsState m -> Text -> [Float] -> [MacroDefinition.Primitive MacroDefinition.Exposure Float]
+lookupEvalMacroInMM state name arguments = catMaybes $ evalState (traverse go content) initialState
+  where
+
+    name' = Text.unpack name
+
+    content :: [MacroDefinition.Definition MacroDefinition.Modifier MacroDefinition.Modifier]
+    content =
+      fromMaybe
+        ( error ( "Macro definition not found: " ++ name' ) )
+        ( Map.lookup name  ( GraphicsState.macroDictionary state ) )
+
+    initialState :: IntMap.IntMap Float
+    initialState = IntMap.fromList $ zip [1..] arguments
+
+    go
+      :: HasCallStack
+      => MacroDefinition.Definition MacroDefinition.Modifier MacroDefinition.Modifier
+      -> State (IntMap.IntMap Float) (Maybe (MacroDefinition.Primitive MacroDefinition.Exposure Float))
+    go = \case
+      MacroDefinition.Variable variableName expression -> do
+        v <- evalExpresion expression
+        modify (IntMap.insert variableName v)
+        pure Nothing
+
+      MacroDefinition.Comment _ ->
+        pure $ Nothing
+
+      MacroDefinition.Primitive a ->
+        Just <$> (traverse evalExpresion a >>= determineExposure . coordinatesToMM)
+
+      MacroDefinition.InvalidDefinition _ _ ->
+        pure $ Nothing
+
+      where
+        determineExposure
+          :: HasCallStack
+          => MacroDefinition.Primitive MacroDefinition.Modifier Float
+          -> State (IntMap.IntMap Float) (MacroDefinition.Primitive MacroDefinition.Exposure Float)
+        determineExposure = \case
+            MacroDefinition.Circle a ->
+              ( \exposure -> MacroDefinition.Circle a {MacroDefinition.circleExposure = exposure} )
+                <$> evalExposure ( MacroDefinition.circleExposure a )
+
+            MacroDefinition.VectorLine a ->
+              ( \exposure -> MacroDefinition.VectorLine a {MacroDefinition.vectorLineExposure = exposure} )
+                <$> evalExposure ( MacroDefinition.vectorLineExposure a )
+
+            MacroDefinition.CenterLine a ->
+              ( \exposure -> MacroDefinition.CenterLine a {MacroDefinition.centerLineExposure = exposure} )
+                <$> evalExposure ( MacroDefinition.centerLineExposure a )
+
+            MacroDefinition.Outline a ->
+              ( \exposure -> MacroDefinition.Outline a {MacroDefinition.outlineExposure = exposure} )
+                <$> evalExposure ( MacroDefinition.outlineExposure a )
+
+            MacroDefinition.Polygon a ->
+              ( \exposure -> MacroDefinition.Polygon a {MacroDefinition.polygonExposure = exposure} )
+                <$> evalExposure ( MacroDefinition.polygonExposure a )
+
+            MacroDefinition.Moire a ->
+              pure (MacroDefinition.Moire a)
+
+            MacroDefinition.Thermal a ->
+              pure (MacroDefinition.Thermal a)
+
+          where
+            evalExposure = pure . toExposure <=< evalExpresion
+              where
+                toExposure x = if x >= 1 then MacroDefinition.ExposureOn else MacroDefinition.ExposureOff
+
+        coordinatesToMM :: MacroDefinition.Primitive a Float -> MacroDefinition.Primitive a Float
+        coordinatesToMM = \case
+            MacroDefinition.Circle a ->
+              MacroDefinition.Circle (toMM state <$> a) {MacroDefinition.circleRotation = MacroDefinition.circleRotation a}
+
+            MacroDefinition.VectorLine a ->
+              MacroDefinition.VectorLine (toMM state <$> a) {MacroDefinition.vectorLineRotation = MacroDefinition.vectorLineRotation a}
+
+            MacroDefinition.CenterLine a ->
+              MacroDefinition.CenterLine (toMM state <$> a) {MacroDefinition.centerLineRotation = MacroDefinition.centerLineRotation a}
+
+            MacroDefinition.Outline a ->
+              MacroDefinition.Outline (toMM state <$> a) {MacroDefinition.outlineRotation = MacroDefinition.outlineRotation a}
+
+            MacroDefinition.Polygon a ->
+              MacroDefinition.Polygon (toMM state <$> a) {MacroDefinition.polygonRotation = MacroDefinition.polygonRotation a}
+
+            MacroDefinition.Moire a ->
+              MacroDefinition.Moire (toMM state <$> a) {MacroDefinition.moireRotation = MacroDefinition.moireRotation a}
+
+            MacroDefinition.Thermal a ->
+              MacroDefinition.Thermal (toMM state <$> a) {MacroDefinition.thermalRotation = MacroDefinition.thermalRotation a}
+
+
+        evalExpresion :: HasCallStack => MacroDefinition.Modifier -> State (IntMap.IntMap Float) Float
+        evalExpresion = \case
+          MacroDefinition.Decimal a ->
+            pure a
+
+          MacroDefinition.VariableReference i ->
+            gets (fromMaybe (error $ "Variable " ++ show i ++ " not found for macro " ++ name'  ) . IntMap.lookup i)
+
+          MacroDefinition.Parentheses a ->
+            evalExpresion a
+
+          MacroDefinition.UnaryPlus a ->
+            evalExpresion a
+
+          MacroDefinition.UnaryMinus a ->
+            negate <$> evalExpresion a
+
+          MacroDefinition.Plus a b ->
+            (+) <$> (evalExpresion a) <*> (evalExpresion b)
+
+          MacroDefinition.Minus a b ->
+            (-) <$> (evalExpresion a) <*> (evalExpresion b)
+
+          MacroDefinition.Multiply a b ->
+            (*) <$> (evalExpresion a) <*> (evalExpresion b)
+
+          MacroDefinition.Divide a b ->
+            (/) <$> (evalExpresion a) <*> (evalExpresion b)
 
 currentAperture
   :: HasCallStack
-  => GraphicsState.GraphicsState m -> ApertureDefinition.ApertureDefinition
+  => GraphicsState.GraphicsState m -> ApertureEntry.ApertureEntry
 currentAperture state =
   let
     DCodeNumber.DCodeNumber aperture =
@@ -526,8 +812,7 @@ currentPolarity state =
 
 
 currentInterpolationMode
-  :: HasCallStack
-  => GraphicsState.GraphicsState m -> InterpolationMode.InterpolationMode
+  :: GraphicsState.GraphicsState m -> InterpolationMode.InterpolationMode
 currentInterpolationMode state =
   fromMaybe
     InterpolationMode.Linear

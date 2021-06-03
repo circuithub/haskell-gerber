@@ -1,0 +1,35 @@
+%FSLAX46Y46*%
+%MOMM*%
+G01*
+G04 Create aperture macro*
+%AMTHERMAL*
+7,0,0,0.800,0.550,0.125,45*%
+%ADD10THERMAL*%
+G04 Select aperture*
+D10*
+G04 Flash aperture*
+X0Y0D03*
+
+%AMTHERS4T*
+0 Round Thermal with 4 gaps with Straight Stroke*
+0 $1 outer diameter*
+0 $2 inner diameter*
+0 $3 gab thickness*
+0 $4 rotation angle*
+0 Thermal primitive*
+7,0,0,$1,$2,$3,$4*%
+%ADD40THERS4T,0.1000X0.0500X0.0200X0.00*%
+%ADD41THERS4T,0.2000X0.1000X0.0200X10.00*%
+%ADD42THERS4T,0.2500X0.2000X0.0600X30.00*%
+%ADD43THERS4T,0.2700X0.2000X0.0600X45.00*%
+
+D40*
+X0Y0500000D03*
+D41*
+X0Y0700000D03*
+D42*
+X0Y1000000D03*
+D43*
+X0Y1300000D03*
+
+M02*

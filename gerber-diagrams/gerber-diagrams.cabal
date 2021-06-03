@@ -1,5 +1,6 @@
+cabal-version:       2.4
 name:                gerber-diagrams
-version:             0.1.1.0
+version:             0.2.0.0
 license:             MIT
 license-file:        LICENSE
 author:              Oliver Charles
@@ -7,17 +8,24 @@ maintainer:          ollie@ocharles.org.uk
 category:            Data
 build-type:          Simple
 extra-source-files:  ChangeLog.md
-cabal-version:       >= 2.0
+extra-source-files:
+  test-data/**/*.png
+  test-data/**/*.gbr
 
 library
   exposed-modules:     Gerber.Diagrams
   build-depends:       base ^>= 4.12 || ^>= 4.13 || ^>= 4.14
-                     , gerber ^>= 0.2
+                     , gerber ^>= 0.3
                      , linear
                      , diagrams-lib
+                     , diagrams-contrib
   hs-source-dirs:      lib
   default-language:    Haskell2010
-  ghc-options:         -Wall
+  ghc-options:        -Weverything
+                      -Wno-missing-import-lists -Wno-missing-export-lists -Wno-implicit-prelude
+                      -Wno-missing-deriving-strategies
+                      -Wno-missing-local-signatures -Wno-monomorphism-restriction
+                      -Wno-unsafe -Wno-safe -Wno-all-missed-specialisations
 
 executable render-gerbers
   hs-source-dirs: exe
@@ -25,7 +33,6 @@ executable render-gerbers
                 base
               , gerber
               , gerber-diagrams
-              , diagrams-cairo
               , optparse-applicative
               , rio
               , text
@@ -35,3 +42,29 @@ executable render-gerbers
   default-language: Haskell2010
   ghc-options: -Wall
   main-is: Main.hs
+
+test-suite tests
+  build-depends:       base ^>= 4.12 || ^>= 4.13 || ^>= 4.14
+                     , gerber
+                     , diagrams-lib
+                     , gerber-diagrams
+                     , diagrams-cairo
+                     , megaparsec ^>= 7.0
+                     , text >=1.2 && <1.3
+                     , generic-deriving
+                     , containers
+                     , monoid-extras
+                     , foldl
+                     , linear
+                     , tasty
+                     , tasty-golden
+                     , pretty-show
+                     , directory
+                     , bytestring
+
+  main-is:             Main.hs
+  hs-source-dirs:      tests
+  type:                exitcode-stdio-1.0
+  default-language:    Haskell2010
+  other-modules:       Gerber.Diagrams.Tests
+  ghc-options:         -Wall

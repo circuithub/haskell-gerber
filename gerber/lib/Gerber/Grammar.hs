@@ -1,28 +1,37 @@
+{-# language BlockArguments #-}
 {-# language FlexibleContexts #-}
+{-# language LambdaCase #-}
 {-# language OverloadedStrings #-}
+{-# language RankNTypes #-}
 {-# language RecordWildCards #-}
+{-# language ScopedTypeVariables #-}
+
 
 module Gerber.Grammar ( parseGerber ) where
 
 import Control.Applicative ( (<|>), empty, many, optional, some )
 import Control.Monad ( guard, void )
 import Data.Char ( digitToInt, isDigit )
+import Data.List.NonEmpty (NonEmpty(..))
 import Data.Foldable ( asum )
-import Data.Monoid ( (<>) )
 import Data.Void ( Void )
 import Text.Megaparsec ( (<?>) )
 import Text.Read ( readMaybe )
+import Linear.V2 (V2(..))
 
 import qualified Data.Text as StrictText
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as Megaparsec
+import qualified Text.Megaparsec.Char.Lexer as Megaparsec
 
 import qualified Gerber.Padding as Padding
 import qualified Gerber.ApertureDefinition as Gerber
+import Gerber.MacroDefinition as MacroDefinition
 import qualified Gerber.Command as Gerber
 import qualified Gerber.DCodeNumber as Gerber
 import qualified Gerber.EncodedDecimal as Gerber
 import qualified Gerber.Format as Gerber
+import qualified Gerber.Mirroring as Gerber
 import qualified Gerber.Movement as Gerber
 import qualified Gerber.Polarity as Gerber
 import qualified Gerber.StepRepeat as Gerber
@@ -36,6 +45,8 @@ digit =
 
 float :: Megaparsec.MonadParsec e StrictText.Text m => m Float
 float = do
+  negated <- maybe id ( const negate ) <$> optional ( Megaparsec.char '-' )
+
   intPart <-
     Megaparsec.takeWhile1P Nothing isDigit
 
@@ -51,8 +62,8 @@ float = do
       Nothing ->
         empty
 
-      Just  a->
-        return a
+      Just a ->
+        pure $ negated a
 
 
 negative :: Num a => Megaparsec.MonadParsec e StrictText.Text m => m a -> m a
@@ -123,7 +134,7 @@ mo =
     <* endOfBlock
 
 
-ad :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
+ad :: forall e m. Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 ad = do
   let
     dCodeNumber =
@@ -153,41 +164,43 @@ ad = do
         <*> float
         <*> optional ( Megaparsec.char 'X' *> float )
 
+    rectangle :: m Gerber.ApertureDefinition
     rectangle =
       Gerber.Rectangle
         <$ Megaparsec.char 'R'
         <* Megaparsec.char ','
         <*> rectangleModifiers
 
+    obround :: m Gerber.ApertureDefinition
     obround =
       Gerber.Obround
         <$ Megaparsec.char 'O'
         <* Megaparsec.char ','
         <*> rectangleModifiers
 
+    polygon :: m Gerber.ApertureDefinition
     polygon =
       Gerber.Polygon
          <$ Megaparsec.char 'P'
          <* Megaparsec.char ','
          <*> polygonModifiers
 
-    macro =
-      Gerber.Macro
-        <$> Megaparsec.takeWhile1P Nothing ( /= '*' )
+    macro :: Gerber.DCodeNumber -> m Gerber.Command
+    macro n =
+        Gerber.MacroAD n
+           <$> Megaparsec.takeWhile1P Nothing ( `notElem` [',', '*'] )
+           <* optional ( Megaparsec.char ',' )
+           <*> ( Megaparsec.sepBy float ( Megaparsec.char 'X' ) )
 
-
-  Gerber.AD
-    <$ Megaparsec.string "AD"
-    <* Megaparsec.char 'D'
-    <*> dCodeNumber
-    <*>
-      asum
-        [ Megaparsec.try circle
-        , Megaparsec.try rectangle
-        , Megaparsec.try obround
-        , Megaparsec.try polygon
-        , macro
-        ]
+  n <- Megaparsec.string "AD" >> Megaparsec.char 'D' >> dCodeNumber
+  let ad' = Megaparsec.try . fmap ( Gerber.AD n )
+  asum
+    [ ad' circle
+    , ad' rectangle
+    , ad' obround
+    , ad' polygon
+    , macro n
+    ]
     <* endOfBlock
 
 
@@ -345,12 +358,207 @@ d03 =
       <* ( Megaparsec.string "D03" <|> Megaparsec.string "D3"  )
       <* endOfBlock
 
-am :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
-am =
-    Gerber.AM
-      <$ Megaparsec.string "AM"
-      <* Megaparsec.someTill Megaparsec.anySingle endOfBlock
-      <* Megaparsec.manyTill Megaparsec.anySingle ( Megaparsec.lookAhead ( Megaparsec.char '%' ) )
+am :: forall e m. Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
+am = Gerber.AM
+  <$ ( Megaparsec.string "AM" )
+  <*> ( StrictText.pack <$> Megaparsec.someTill Megaparsec.anySingle endOfBlock' )
+  <*> ( Megaparsec.sepEndBy content endOfBlock' )
+  where
+    endOfBlock' :: m ()
+    endOfBlock' = endOfBlock >> newlines
+
+    content :: m ( MacroDefinition.Definition MacroDefinition.Modifier MacroDefinition.Modifier )
+    content =
+      ( asum . map Megaparsec.try )
+        [ MacroDefinition.Variable <$> ( Megaparsec.char '$' >> Megaparsec.decimal <* Megaparsec.char '=' ) <*> modifier
+        , MacroDefinition.Comment <$ checkCode 0 <*> ( Megaparsec.takeWhileP Nothing ( /='*' ) )
+        , MacroDefinition.Primitive . MacroDefinition.Circle <$> circle
+        , MacroDefinition.Primitive . MacroDefinition.VectorLine <$> vectorLine
+        , MacroDefinition.Primitive . MacroDefinition.CenterLine <$> centerLine
+        , MacroDefinition.Primitive . MacroDefinition.Outline <$> outline
+        , MacroDefinition.Primitive . MacroDefinition.Polygon <$> polygon
+        , MacroDefinition.Primitive . MacroDefinition.Moire <$> moire
+        , MacroDefinition.Primitive . MacroDefinition.Thermal <$> thermal
+        , invalidDefinition
+        ]
+      where
+
+        checkCode :: Int -> m ()
+        checkCode code = Megaparsec.decimal >>= \a -> guard ( a == code )
+
+        comma :: m ()
+        comma = void ( Megaparsec.char ',' >> newlines )
+
+        coordinatePair :: m ( V2 MacroDefinition.Modifier )
+        coordinatePair = V2 <$> ( modifier <* comma ) <*> modifier
+
+        circle :: m ( MacroDefinition.CircleModifiers MacroDefinition.Modifier MacroDefinition.Modifier )
+        circle =
+          MacroDefinition.CircleModifiers
+            <$ ( checkCode 1 <* comma )
+            <*> ( modifier <* comma )
+            <*> ( modifier <* comma )
+            <*> coordinatePair
+            <*> optional ( comma >> modifier )
+
+        vectorLine :: m ( MacroDefinition.VectorLineModifiers MacroDefinition.Modifier MacroDefinition.Modifier )
+        vectorLine =
+          MacroDefinition.VectorLineModifiers
+            <$ ( checkCode 20 <* comma )
+            <*> ( modifier <* comma )
+            <*> ( modifier <* comma )
+            <*> ( coordinatePair  <* comma )
+            <*> ( coordinatePair  <* comma )
+            <*> modifier
+
+        centerLine :: m ( MacroDefinition.CenterLineModifiers MacroDefinition.Modifier MacroDefinition.Modifier )
+        centerLine =
+          MacroDefinition.CenterLineModifiers
+            <$ ( checkCode 21 <* comma )
+            <*> ( modifier <* comma )
+            <*> ( modifier <* comma )
+            <*> ( modifier <* comma )
+            <*> ( coordinatePair  <* comma )
+            <*> modifier
+
+        outline :: m ( MacroDefinition.OutlineModifiers MacroDefinition.Modifier MacroDefinition.Modifier )
+        outline =
+          MacroDefinition.OutlineModifiers
+            <$ ( checkCode 4 <* comma )
+            <*> ( modifier <* comma )
+            <*> ( vertices <* comma )
+            <*> modifier
+          where
+            vertices = do
+              -- from the spec The number of vertices of the outline = the number of coordinate pairs minus one.  An integer ≥3.
+              numVertices <- Megaparsec.decimal <* comma
+              sequence . ( coordinatePair :| ) . replicate numVertices $ ( comma >> coordinatePair )
+
+        polygon :: m ( MacroDefinition.PolygonModifiers MacroDefinition.Modifier MacroDefinition.Modifier )
+        polygon =
+          MacroDefinition.PolygonModifiers
+            <$ ( checkCode 5 <* comma )
+            <*> ( modifier <* comma )
+            <*> ( Megaparsec.decimal <* comma )
+            <*> ( coordinatePair <* comma )
+            <*> ( modifier <* comma )
+            <*> modifier
+
+        moire :: m ( MacroDefinition.MoireModifiers MacroDefinition.Modifier )
+        moire =
+          MacroDefinition.MoireModifiers
+            <$ ( checkCode 6 <* comma )
+            <*> ( coordinatePair <* comma )
+            <*> ( modifier <* comma )
+            <*> ( modifier <* comma )
+            <*> ( modifier <* comma )
+            <*> ( modifier <* comma )
+            <*> ( modifier <* comma )
+            <*> ( modifier <* comma )
+            <*> modifier
+
+        thermal :: m ( MacroDefinition.ThermalModifiers MacroDefinition.Modifier )
+        thermal =
+          MacroDefinition.ThermalModifiers
+            <$ ( checkCode 7 <* comma )
+            <*> ( coordinatePair <* comma )
+            <*> ( modifier <* comma )
+            <*> ( modifier <* comma )
+            <*> ( modifier <* comma )
+            <*> modifier
+
+        invalidDefinition :: m ( MacroDefinition.Definition MacroDefinition.Modifier MacroDefinition.Modifier )
+        invalidDefinition =
+          MacroDefinition.InvalidDefinition
+            <$> ((Megaparsec.decimal >>= \a -> guard  (a `notElem` [0, 1, 4, 5, 7, 6, 20, 21 ] ) >> pure a) <* comma)
+            <*> (Megaparsec.takeWhileP Nothing (/= '*') )
+
+        modifier :: m ( MacroDefinition.Modifier )
+        modifier = fixAssociation <$> unaryOrBinaryModifier
+          where
+            unaryOrBinaryModifier :: m MacroDefinition.Modifier
+            unaryOrBinaryModifier = do
+              a <- asum $ map Megaparsec.try
+                [ unaryModifier
+                , UnaryPlus <$ Megaparsec.char '+' <*> unaryModifier
+                , UnaryMinus <$ Megaparsec.char '-' <*> unaryModifier
+                ]
+              binayrModifier a <|> pure a
+
+            unaryModifier :: m MacroDefinition.Modifier
+            unaryModifier = asum $ map Megaparsec.try
+              [ Megaparsec.between ( Megaparsec.char '(' ) ( Megaparsec.char ')' ) ( Parentheses <$> unaryOrBinaryModifier )
+              , Decimal <$> float
+              , VariableReference <$ Megaparsec.char '$' <*> Megaparsec.decimal
+              ]
+
+            binayrModifier :: Modifier -> m MacroDefinition.Modifier
+            binayrModifier m = asum $ map Megaparsec.try
+              [ Plus m <$ Megaparsec.char '+' <*> unaryOrBinaryModifier
+              , Minus m <$ Megaparsec.char '-' <*> unaryOrBinaryModifier
+              , Multiply m <$ Megaparsec.satisfy (`elem` ['x','X'])  <*> unaryOrBinaryModifier
+              , Divide m <$ Megaparsec.char '/' <*> unaryOrBinaryModifier
+              ]
+
+            -- we parse left biased so after parsing we rebalance according to associativity
+            -- so that the expression tree is in the correct evaluation order
+            fixAssociation :: MacroDefinition.Modifier -> MacroDefinition.Modifier
+            fixAssociation stable
+              | reducedOnce == stable = stable
+              | otherwise = fixAssociation reducedOnce
+              where
+                reducedOnce = go stable
+
+                go = \case
+                  MacroDefinition.Decimal x ->
+                    MacroDefinition.Decimal x
+
+                  VariableReference x ->
+                    VariableReference x
+
+                  Parentheses x ->
+                    Parentheses ( go x )
+
+                  UnaryPlus x ->
+                    UnaryPlus ( go x )
+
+                  UnaryMinus x ->
+                    UnaryMinus ( go x )
+
+                  Plus l r ->
+                    Plus ( go l ) ( go r )
+
+                  Minus l r ->
+                    case go r of
+                      Plus rl rr ->
+                        Plus ( Minus ( go l ) rl ) rr
+                      _ ->
+                        Minus ( go l ) ( go r )
+
+                  Multiply l r ->
+                    case go r of
+                      Plus rl rr ->
+                        Plus ( Multiply ( go l ) rl ) rr
+
+                      Minus rl rr ->
+                        Minus ( Multiply ( go l ) rl ) rr
+
+                      _ ->
+                        Multiply ( go l ) ( go r )
+
+                  Divide l r ->
+                    case go r of
+                      Plus rl rr ->
+                        Plus ( Divide ( go l ) rl ) rr
+
+                      Minus rl rr ->
+                        Minus ( Divide ( go l ) rl ) rr
+
+                      Multiply rl rr ->
+                        Multiply ( Divide ( go l ) rl ) rr
+
+                      _ ->
+                        Divide ( go l ) ( go r )
 
 
 sr :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
@@ -360,6 +568,11 @@ sr =
       <*> stepRepeat
       <* endOfBlock
 
+srEnd :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
+srEnd =
+    Gerber.SR_End
+      <$  Megaparsec.string "SR"
+      <* endOfBlock
 
 sf :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 sf =
@@ -395,6 +608,44 @@ ip =
       <* ( Megaparsec.string "POS" <|> Megaparsec.string "NEG" )
       <* endOfBlock
 
+ab :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
+ab =
+    Gerber.AB
+      <$ Megaparsec.string "ABD"
+      <*> ( Gerber.DCodeNumber <$> int )
+      <* endOfBlock
+
+abEnd :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
+abEnd =
+    Gerber.AB_End
+      <$ Megaparsec.string "AB"
+      <* endOfBlock
+
+lm :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
+lm =
+    Gerber.LM
+      <$ Megaparsec.string "LM"
+      <*> ( Megaparsec.choice . map Megaparsec.try )
+            [ Gerber.MirrorXY <$ Megaparsec.string "XY"
+            , Gerber.MirrorNone <$ Megaparsec.char 'N'
+            , Gerber.MirrorX <$ Megaparsec.char 'X'
+            , Gerber.MirrorY <$ Megaparsec.char 'Y'
+            ]
+      <* endOfBlock
+
+lr :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
+lr =
+    Gerber.LR
+      <$ Megaparsec.string "LR"
+      <*> float
+      <* endOfBlock
+
+ls :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
+ls =
+    Gerber.LS
+      <$ Megaparsec.string "LS"
+      <*> float
+      <* endOfBlock
 
 command :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 command =
@@ -420,10 +671,31 @@ command =
         , of_
         , am
         , sr
+        , srEnd
         , sf
         , mi
+        , ingoredAttribute
+        , ab
+        , abEnd
+        , lm
+        , lr
+        , ls
         ]
     )
+
+ingoredAttribute :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
+ingoredAttribute = asum $ map Megaparsec.try
+  [ mk Gerber.IngoredAttributeTF "TF."
+  , mk Gerber.IngoredAttributeTA "TA."
+  , mk Gerber.IngoredAttributeTO "TO."
+  , mk Gerber.IngoredAttributeTD "TD."
+  ]
+  where
+    mk constructor prefix  =
+      constructor
+        <$ Megaparsec.string prefix
+        <*> ( Megaparsec.takeWhile1P Nothing (/= '*') )
+        <* endOfBlock
 
 deprecated :: Megaparsec.MonadParsec e StrictText.Text m => m [Gerber.Command]
 deprecated = do

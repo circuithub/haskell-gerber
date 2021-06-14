@@ -10,6 +10,7 @@ module Gerber.EncodedDecimal ( EncodedDecimal(EncodedDecimal, StoredEncodedDecim
 
 import Data.Int
 import Data.Word
+import Data.List (foldl')
 
 pattern EncodedDecimal :: Bool -> [ Int ] -> EncodedDecimal
 pattern EncodedDecimal {negative, digits} <- (toEncoded -> (negative, digits)) where
@@ -39,15 +40,13 @@ toEncoded StoredEncodedDecimal {width, digitsAsInt} = (digitsAsInt < 0, reverse 
       | otherwise = num `mod` 10 : go (currentWidth + 1) (num `div` 10)
 
 fromEncoded :: Bool -> [Int] -> EncodedDecimal
-fromEncoded isNegative digitList =
-  StoredEncodedDecimal
-    { width = fromIntegral (length digitList)
-    , digitsAsInt = fromIntegral . doNegation . go 1 0 . reverse $ digitList
-    }
+fromEncoded isNegative = doNegation . foldl' step zero . reverse
   where
-    go _ !sum_ [] = sum_
-    go !magnitude !sum_ (digit:digits_) = go (magnitude * 10) (sum_ + magnitude * digit) digits_
-
+    zero = StoredEncodedDecimal 0 0
+    step StoredEncodedDecimal{ width, digitsAsInt } digit = StoredEncodedDecimal
+      { width = width + 1
+      , digitsAsInt = digitsAsInt + fromIntegral digit * 10 ^ width
+      }
     doNegation
-      | isNegative = negate
+      | isNegative = \x@StoredEncodedDecimal{digitsAsInt} -> x {digitsAsInt = negate digitsAsInt}
       | otherwise = id

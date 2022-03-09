@@ -6,14 +6,14 @@ data ApertureDefinition
   | Rectangle !RectangleModifiers
   | Obround !RectangleModifiers
   | Polygon !PolygonModifiers
-  deriving ( Eq, Show )
+  deriving ( Eq, Ord, Show )
 
 
 data CircleModifiers = CircleModifiers
   { diameter :: !Float
   , circleHoleDiameter :: !( Maybe Float )
   }
-  deriving ( Eq, Show )
+  deriving ( Eq, Ord, Show )
 
 
 data RectangleModifiers = RectangleModifiers
@@ -21,7 +21,7 @@ data RectangleModifiers = RectangleModifiers
   , height :: !Float
   , rectangleHoleDiameter :: !( Maybe Float )
   }
-  deriving ( Eq, Show )
+  deriving ( Eq, Ord, Show )
 
 
 data PolygonModifiers = PolygonModifiers
@@ -30,4 +30,4 @@ data PolygonModifiers = PolygonModifiers
   , rotation :: !( Maybe Float )
   , polygonHoleDiameter :: !( Maybe Float )
   }
-  deriving ( Eq, Show )
+  deriving ( Eq, Ord, Show )

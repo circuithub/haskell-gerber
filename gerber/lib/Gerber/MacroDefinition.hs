@@ -1,5 +1,3 @@
-{-# language DeriveFunctor #-}
-{-# language DeriveFoldable #-}
 {-# language DeriveTraversable #-}
 module Gerber.MacroDefinition where
 

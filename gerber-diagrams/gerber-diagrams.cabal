@@ -26,6 +26,8 @@ library
                       -Wno-missing-deriving-strategies
                       -Wno-missing-local-signatures -Wno-monomorphism-restriction
                       -Wno-unsafe -Wno-safe -Wno-all-missed-specialisations
+                      -Wno-missing-safe-haskell-mode
+                      -Wno-prepositive-qualified-module
 
 executable render-gerbers
   hs-source-dirs: exe

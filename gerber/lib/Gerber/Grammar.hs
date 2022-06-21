@@ -127,9 +127,9 @@ mo =
   Gerber.MO
     <$ Megaparsec.string "MO"
     <*>
-      ( ( Gerber.MM <$ Megaparsec.string "MM" )
+      ( Gerber.MM <$ Megaparsec.string "MM"
         <|>
-        ( Gerber.IN <$ Megaparsec.string "IN" )
+        Gerber.IN <$ Megaparsec.string "IN"
       )
     <* endOfBlock
 
@@ -190,7 +190,7 @@ ad = do
         Gerber.MacroAD n
            <$> Megaparsec.takeWhile1P Nothing ( `notElem` [',', '*'] )
            <* optional ( Megaparsec.char ',' )
-           <*> ( Megaparsec.sepBy float ( Megaparsec.char 'X' ) )
+           <*> Megaparsec.sepBy float ( Megaparsec.char 'X' )
 
   n <- Megaparsec.string "AD" >> Megaparsec.char 'D' >> dCodeNumber
   let ad' = Megaparsec.try . fmap ( Gerber.AD n )
@@ -314,7 +314,7 @@ movement =
   where
 
     encodedDecimal = do
-      negative <-
+      negative_ <-
         asum
           [ True <$ Megaparsec.char '-'
           , pure False
@@ -323,7 +323,7 @@ movement =
       digits <-
         map digitToInt . StrictText.unpack <$> Megaparsec.takeWhileP Nothing isDigit
 
-      return Gerber.EncodedDecimal{..}
+      return Gerber.EncodedDecimal{negative = negative_, ..}
 
 
 stepRepeat :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.StepRepeat
@@ -360,9 +360,9 @@ d03 =
 
 am :: forall e m. Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 am = Gerber.AM
-  <$ ( Megaparsec.string "AM" )
+  <$ Megaparsec.string "AM"
   <*> ( StrictText.pack <$> Megaparsec.someTill Megaparsec.anySingle endOfBlock' )
-  <*> ( Megaparsec.sepEndBy content endOfBlock' )
+  <*> Megaparsec.sepEndBy content endOfBlock'
   where
     endOfBlock' :: m ()
     endOfBlock' = endOfBlock >> newlines
@@ -371,7 +371,7 @@ am = Gerber.AM
     content =
       ( asum . map Megaparsec.try )
         [ MacroDefinition.Variable <$> ( Megaparsec.char '$' >> Megaparsec.decimal <* Megaparsec.char '=' ) <*> modifier
-        , MacroDefinition.Comment <$ checkCode 0 <*> ( Megaparsec.takeWhileP Nothing ( /='*' ) )
+        , MacroDefinition.Comment <$ checkCode 0 <*> Megaparsec.takeWhileP Nothing ( /='*' )
         , MacroDefinition.Primitive . MacroDefinition.Circle <$> circle
         , MacroDefinition.Primitive . MacroDefinition.VectorLine <$> vectorLine
         , MacroDefinition.Primitive . MacroDefinition.CenterLine <$> centerLine
@@ -432,7 +432,7 @@ am = Gerber.AM
             vertices = do
               -- from the spec The number of vertices of the outline = the number of coordinate pairs minus one.  An integer ≥3.
               numVertices <- Megaparsec.decimal <* comma
-              sequence . ( coordinatePair :| ) . replicate numVertices $ ( comma >> coordinatePair )
+              sequence . ( coordinatePair :| ) . replicate numVertices $ comma >> coordinatePair
 
         polygon :: m ( MacroDefinition.PolygonModifiers MacroDefinition.Modifier MacroDefinition.Modifier )
         polygon =
@@ -471,9 +471,9 @@ am = Gerber.AM
         invalidDefinition =
           MacroDefinition.InvalidDefinition
             <$> ((Megaparsec.decimal >>= \a -> guard  (a `notElem` [0, 1, 4, 5, 7, 6, 20, 21 ] ) >> pure a) <* comma)
-            <*> (Megaparsec.takeWhileP Nothing (/= '*') )
+            <*> Megaparsec.takeWhileP Nothing (/= '*')
 
-        modifier :: m ( MacroDefinition.Modifier )
+        modifier :: m MacroDefinition.Modifier
         modifier = fixAssociation <$> unaryOrBinaryModifier
           where
             unaryOrBinaryModifier :: m MacroDefinition.Modifier
@@ -694,7 +694,7 @@ ingoredAttribute = asum $ map Megaparsec.try
     mk constructor prefix  =
       constructor
         <$ Megaparsec.string prefix
-        <*> ( Megaparsec.takeWhile1P Nothing (/= '*') )
+        <*> Megaparsec.takeWhile1P Nothing (/= '*')
         <* endOfBlock
 
 deprecated :: Megaparsec.MonadParsec e StrictText.Text m => m [Gerber.Command]
@@ -730,7 +730,7 @@ gerberFile =
   snoc
     <$> ( concat
             <$ many endOfBlock
-            <*> many ( commands <|> ( concat <$> extended commands ) )
+            <*> many ( commands <|> concat <$> extended commands )
         )
     <*> m02
     <* Megaparsec.eof

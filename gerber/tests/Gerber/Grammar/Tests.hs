@@ -30,7 +30,7 @@ tests =  testGroup "Gerber.Grammar.Tests"
     mkGolden example = goldenVsStringDiff example differ ( "test-data/" ++ example ++ ".golden" ) parser
       where
         differ ref new = ["diff", "-u", ref, new]
-        parser = ( parseGerber <$> Text.readFile filepath )  >>= either onFailure onSuccess
+        parser = Text.readFile filepath >>= either onFailure onSuccess . parseGerber
           where
             filepath = "test-data/" ++ example ++ ".gbr"
             onFailure = fail . errorBundlePretty

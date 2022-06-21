@@ -53,7 +53,7 @@ tests =  testGroup "Gerber.Diagram.Tests"
         goldenPath = "test-data/" ++ example ++ ".golden.png"
         testPath = "test-data/" ++ example ++ ".test.png"
         differ ref new = ["diff", ref, new]
-        writeOutput = (parseGerber <$> Text.readFile filepath)  >>= either onFailure onSuccess
+        writeOutput = Text.readFile filepath  >>= either onFailure onSuccess . parseGerber
           where
             filepath = "test-data/" ++ example ++ ".gbr"
             onFailure = fail . errorBundlePretty

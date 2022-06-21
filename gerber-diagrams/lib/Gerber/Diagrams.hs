@@ -31,7 +31,6 @@ import qualified Gerber.Evaluate.Edge as Edge
 import qualified Gerber.MacroDefinition as MacroDefinition
 import qualified Gerber.Mirroring as Mirroring
 import qualified Gerber.Polarity as Polarity
-import qualified Linear
 import Diagrams (N, V)
 
 gerberToDiagram
@@ -146,11 +145,10 @@ gerberToDiagramCustom config =
                     ( ApertureDefinition.rectangleHoleDiameter params )
 
                 ApertureDefinition.Polygon params ->
-                  ( maybe
+                  maybe
                       id
                       ( Diagrams.rotate . ( Diagrams.@@ Diagrams.deg ) . realToFrac)
                       ( ApertureDefinition.rotation params )
-                  )
                   ( addHole
                       ( Diagrams.polygon
                           ( Diagrams.PolygonOpts
@@ -367,17 +365,17 @@ renderMacro = foldMap Diagrams.stroke . foldl' addToOnPaths [] . concatMap ( exp
         maybeRotate = maybe id rotate
 
         pathCircle :: MacroDefinition.CircleModifiers MacroDefinition.Exposure Double -> ( MacroDefinition.Exposure, [Diagrams.Path V2 Double] )
-        pathCircle a = ( MacroDefinition.circleExposure a, ) $
+        pathCircle a = (MacroDefinition.circleExposure a,
           [ maybeRotate
               ( MacroDefinition.circleRotation a )
               ( Diagrams.translate
                   ( MacroDefinition.circleCenter a )
                   ( safeCircle ( MacroDefinition.diameter a / 2 ) )
               )
-          ]
+          ])
 
         pathVectorLine :: MacroDefinition.VectorLineModifiers MacroDefinition.Exposure Double -> ( MacroDefinition.Exposure, [Diagrams.Path V2 Double] )
-        pathVectorLine a = ( MacroDefinition.vectorLineExposure a, ) $
+        pathVectorLine a = (MacroDefinition.vectorLineExposure a,
           [ rotate
               ( MacroDefinition.vectorLineRotation a )
               ( Diagrams.translate ( ( s ^+^ e ) / 2 )
@@ -385,7 +383,7 @@ renderMacro = foldMap Diagrams.stroke . foldl' addToOnPaths [] . concatMap ( exp
                      ( Diagrams.rect ( distance s e ) ( MacroDefinition.vectorLineWidth a ) )
                   )
               )
-          ]
+          ])
           where
             s = MacroDefinition.start a
             e = MacroDefinition.end a
@@ -393,26 +391,26 @@ renderMacro = foldMap Diagrams.stroke . foldl' addToOnPaths [] . concatMap ( exp
             theta = Diagrams.atan2A dy dx
 
         pathCenterLine :: MacroDefinition.CenterLineModifiers MacroDefinition.Exposure Double -> ( MacroDefinition.Exposure, [Diagrams.Path V2 Double] )
-        pathCenterLine a = ( MacroDefinition.centerLineExposure a, ) $
+        pathCenterLine a = (MacroDefinition.centerLineExposure a,
           [ rotate
               ( MacroDefinition.centerLineRotation a )
               ( Diagrams.translate ( MacroDefinition.centerLineCenter a )
                   ( Diagrams.rect ( MacroDefinition.centerLineWidth a ) ( MacroDefinition.height a ) )
               )
-          ]
+          ])
 
         pathOutline :: MacroDefinition.OutlineModifiers MacroDefinition.Exposure Double -> ( MacroDefinition.Exposure, [Diagrams.Path V2 Double] )
-        pathOutline a = ( MacroDefinition.outlineExposure a, ) $
+        pathOutline a = (MacroDefinition.outlineExposure a,
           [ rotate
               ( MacroDefinition.outlineRotation a )
               ( Diagrams.toPath $ Diagrams.closeTrail ( Diagrams.fromVertices points ) `Diagrams.at` firstPoint )
-          ]
+          ])
           where
             firstPoint NonEmpty.:| restPoints = P <$> MacroDefinition.vertices a
             points = firstPoint : restPoints
 
         pathPolygon :: MacroDefinition.PolygonModifiers MacroDefinition.Exposure Double -> ( MacroDefinition.Exposure, [Diagrams.Path V2 Double] )
-        pathPolygon a = ( MacroDefinition.polygonExposure a, ) $
+        pathPolygon a = (MacroDefinition.polygonExposure a,
           [rotate ( MacroDefinition.polygonRotation a )
              ( Diagrams.polygon
                 ( Diagrams.PolygonOpts
@@ -424,21 +422,21 @@ renderMacro = foldMap Diagrams.stroke . foldl' addToOnPaths [] . concatMap ( exp
                   ( P ( Linear.V2 0 0 ) )
                 )
              )
-          ]
+          ])
 
         pathMoire :: MacroDefinition.MoireModifiers Double -> ( MacroDefinition.Exposure, [Diagrams.Path V2 Double] )
         pathMoire a = ( MacroDefinition.ExposureOn, ) $
-          rotate ( MacroDefinition.moireRotation a ) . Diagrams.translate ( MacroDefinition.moireCenter a ) <$> ( crossHair ++  rings )
+          rotate ( MacroDefinition.moireRotation a ) . Diagrams.translate ( MacroDefinition.moireCenter a ) <$> crossHair ++  rings
           where
             rings = take ( round $ MacroDefinition.maximumNumberOfRings a ) . unfoldr oneRing . (/2) . MacroDefinition.outerRingDiameter $ a
 
             oneRing outer
               | outer <= 0 = Nothing
-              | otherwise = Just $ ( ring, nextOuter )
+              | otherwise = Just ( ring, nextOuter )
               where
-                inner = outer - ( MacroDefinition.ringThickness a )
+                inner = outer - MacroDefinition.ringThickness a
                 ring = Diagrams.annularWedge outer inner Diagrams.xDir ( 1 Diagrams.@@ Diagrams.turn )
-                nextOuter = inner - ( MacroDefinition.ringGap a )
+                nextOuter = inner - MacroDefinition.ringGap a
 
             crossHair
              | l <= 0 || t <= 0 = []
@@ -452,12 +450,12 @@ renderMacro = foldMap Diagrams.stroke . foldl' addToOnPaths [] . concatMap ( exp
 
 
         pathThermal :: MacroDefinition.ThermalModifiers Double -> ( MacroDefinition.Exposure, [Diagrams.Path V2 Double] )
-        pathThermal a = ( MacroDefinition.ExposureOn, ) $
+        pathThermal a = (MacroDefinition.ExposureOn,
           [ rotate
              ( MacroDefinition.thermalRotation a )
              ( Diagrams.translate ( MacroDefinition.thermalCenter a ) thermal
              )
-          ]
+          ])
           where
             thermal = foldl' ( Diagrams.Boolean.difference Diagrams.EvenOdd ) outerCircle [ hgap, vgap, innerCircle ]
 

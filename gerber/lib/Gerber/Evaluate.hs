@@ -157,9 +157,9 @@ step evaluator state
                 { ApertureDefinition.outerDiameter =
                     toMM state ( ApertureDefinition.outerDiameter params )
                 , ApertureDefinition.rotation =
-                    toMM state <$> ( ApertureDefinition.rotation params )
+                    toMM state <$> ApertureDefinition.rotation params
                 , ApertureDefinition.polygonHoleDiameter =
-                    toMM state <$> ( ApertureDefinition.polygonHoleDiameter params )
+                    toMM state <$> ApertureDefinition.polygonHoleDiameter params
                 }
 
     in
@@ -688,13 +688,13 @@ lookupEvalMacroInMM state name arguments = catMaybes $ evalState (traverse go co
         pure Nothing
 
       MacroDefinition.Comment _ ->
-        pure $ Nothing
+        pure Nothing
 
       MacroDefinition.Primitive a ->
         Just <$> (traverse evalExpresion a >>= determineExposure . coordinatesToMM)
 
       MacroDefinition.InvalidDefinition _ _ ->
-        pure $ Nothing
+        pure Nothing
 
       where
         determineExposure
@@ -775,16 +775,16 @@ lookupEvalMacroInMM state name arguments = catMaybes $ evalState (traverse go co
             negate <$> evalExpresion a
 
           MacroDefinition.Plus a b ->
-            (+) <$> (evalExpresion a) <*> (evalExpresion b)
+            (+) <$> evalExpresion a <*> evalExpresion b
 
           MacroDefinition.Minus a b ->
-            (-) <$> (evalExpresion a) <*> (evalExpresion b)
+            (-) <$> evalExpresion a <*> evalExpresion b
 
           MacroDefinition.Multiply a b ->
-            (*) <$> (evalExpresion a) <*> (evalExpresion b)
+            (*) <$> evalExpresion a <*> evalExpresion b
 
           MacroDefinition.Divide a b ->
-            (/) <$> (evalExpresion a) <*> (evalExpresion b)
+            (/) <$> evalExpresion a <*> evalExpresion b
 
 currentAperture
   :: HasCallStack

@@ -1,6 +1,5 @@
 {-# language ScopedTypeVariables #-}
 {-# language RankNTypes #-}
-{-# language GeneralizedNewtypeDeriving #-}
 {-# language LambdaCase #-}
 
 module Gerber.Evaluate.GraphicsState.StackStream
@@ -28,7 +27,7 @@ data StackStream stackId streamElem
   | Add (Endo [streamElem])
 
 instance (Eq stackId, Eq streamElem) => Eq (StackStream stackId streamElem) where
-  -- | Equality is defined in terms of 'toLists'
+  -- Equality is defined in terms of 'toLists'
   a == b = toLists a == toLists b
 
 instance (Show stackId, Show streamElem) => Show (StackStream stackId streamElem) where
@@ -81,7 +80,7 @@ null :: StackStream stackId streamElem -> Bool
 null Empty = True
 null (Pop _) = True
 null (Add _) = True
-null (Push _ _ _) = False
+null (Push {}) = False
 
 -- | Convert the stack stream to a list of lists (equality is defined with respect to this operation).
 toLists :: StackStream stackId streamElem -> [(stackId, [streamElem])]

@@ -1,5 +1,3 @@
-{-# language DeriveGeneric #-}
-{-# language DeriveAnyClass #-}
 {-# language PatternSynonyms #-}
 {-# language ViewPatterns #-}
 {-# language BangPatterns #-}

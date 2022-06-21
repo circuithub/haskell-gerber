@@ -18,7 +18,7 @@ module Gerber.Diagrams
 
 import Data.List (unfoldr, foldl')
 import Data.Typeable ( Typeable )
-import Linear ( V2(..), (^+^), (^-^), distance )
+import Linear ( V2(..), (^+^), (^-^), distance, Epsilon (nearZero) )
 import Linear.Affine ( Point (..), (.-.) )
 
 import qualified Data.List.NonEmpty as NonEmpty
@@ -32,11 +32,21 @@ import qualified Gerber.MacroDefinition as MacroDefinition
 import qualified Gerber.Mirroring as Mirroring
 import qualified Gerber.Polarity as Polarity
 import qualified Linear
+import Diagrams (N, V)
 
 gerberToDiagram
   :: Diagrams.Renderable ( Diagrams.Path Diagrams.V2 Double ) b
   => Gerber.Evaluator ( Diagrams.QDiagram b Diagrams.V2 Double Diagrams.Any )
 gerberToDiagram = gerberToDiagramCustom defaultConfig
+
+
+-- diagrams crashes if the scale factor is zero. But scaling by
+-- zero is really just an empty image, so we try and detect it and
+-- return mempty.
+safeCircle :: forall t n. (Diagrams.TrailLike t, V t ~ V2, N t ~ n, Diagrams.Transformable t, Monoid t, Epsilon n) => n -> t
+safeCircle r
+  | nearZero r = mempty
+  | otherwise = Diagrams.circle r
 
 
 gerberToDiagramCustom
@@ -96,7 +106,7 @@ gerberToDiagramCustom config =
           withPolarity config polarity ( strokeAperture aperture trail )
 
     , Gerber.flash =
-        let circleFromDiameter = Diagrams.circle . realToFrac . ( / 2 )
+        let circleFromDiameter = safeCircle . realToFrac . ( / 2 )
 
             addHole solid = Diagrams.stroke . maybe solid withHole
               where
@@ -362,7 +372,7 @@ renderMacro = foldMap Diagrams.stroke . foldl' addToOnPaths [] . concatMap ( exp
               ( MacroDefinition.circleRotation a )
               ( Diagrams.translate
                   ( MacroDefinition.circleCenter a )
-                  ( Diagrams.circle ( MacroDefinition.diameter a / 2 ) )
+                  ( safeCircle ( MacroDefinition.diameter a / 2 ) )
               )
           ]
 
@@ -453,9 +463,9 @@ renderMacro = foldMap Diagrams.stroke . foldl' addToOnPaths [] . concatMap ( exp
 
             outerDim = MacroDefinition.outerDiameter a
 
-            outerCircle = Diagrams.circle ( outerDim / 2 )
+            outerCircle = safeCircle ( outerDim / 2 )
 
-            innerCircle = Diagrams.circle ( MacroDefinition.innerDiameter a / 2 )
+            innerCircle = safeCircle ( MacroDefinition.innerDiameter a / 2 )
 
             thickness = MacroDefinition.gapThickness a
 

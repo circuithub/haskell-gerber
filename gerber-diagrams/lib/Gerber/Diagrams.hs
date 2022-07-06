@@ -74,7 +74,7 @@ gerberToDiagramCustom config =
                   ( realToFrac <$> Diagrams.r2 center )
                   ( Diagrams.scale
                       ( realToFrac ( Diagrams.norm toStart ) )
-                      ( if Linear.nearZero ( toStart .-. toEnd ) then
+                      ( if all Linear.nearZero ( toStart .-. toEnd ) then
                           Diagrams.arc'
                             1
                             ( realToFrac <$> Diagrams.direction toStart )
@@ -221,7 +221,7 @@ fromEdges currentPoint ( Edge.ArcCW center end : edges ) =
       Diagrams.p2 end .-. Diagrams.p2 center
 
     arc =
-      if Linear.nearZero ( Diagrams.p2 currentPoint .-. Diagrams.p2 end ) then
+      if all Linear.nearZero ( Diagrams.p2 currentPoint .-. Diagrams.p2 end ) then
         -- S2.12 states:
         --
         -- Multi quadrant mode: mode defining how circular interpolation is
@@ -253,7 +253,7 @@ fromEdges currentPoint ( Edge.ArcCCW center end : edges ) =
       Diagrams.p2 end .-. Diagrams.p2 center
 
     arc =
-      if Linear.nearZero ( Diagrams.p2 currentPoint .-. Diagrams.p2 end ) then
+      if all Linear.nearZero ( Diagrams.p2 currentPoint .-. Diagrams.p2 end ) then
         -- S2.12 states:
         --
         -- Multi quadrant mode: mode defining how circular interpolation is

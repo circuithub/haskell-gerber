@@ -38,8 +38,8 @@ executable render-gerbers
               , optparse-applicative
               , rio
               , text
+              , diagrams-gi-cairo
               , diagrams-lib
-              , diagrams-cairo
               , foldl
   default-language: Haskell2010
   ghc-options: -Wall

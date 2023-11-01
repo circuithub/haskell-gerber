@@ -1,13 +1,14 @@
-{ pkgs ? import <nixpkgs> {
-    config = { allowBroken = true; };
-  }
-, compiler ? "default"
-}:
 let
+  pkgs = import
+    (fetchTarball {
+      name = "release-23.05";
+      url = "https://github.com/nixos/nixpkgs/archive/3238fc2e4884c03975fd0c832adbd3cc3d7fe65c.tar.gz";
+      sha256 = "1s84shi6jb7vhcvv9wvyskcwl4i46rnjwfpqdiwjy3hil0h9iim4";
+    })
+    { config = { allowBroken = true; }; };
+
   haskellPackages =
-    if compiler == "default"
-    then pkgs.haskellPackages
-    else pkgs.haskell.packages.${compiler};
+    pkgs.haskellPackages;
 
   inherit (haskellPackages) callCabal2nix;
 
@@ -18,6 +19,6 @@ let
 
 in
 haskellPackages.shellFor {
-  buildInputs = [ haskellPackages.cabal-install haskellPackages.haskell-language-server ];
+  buildInputs = [ haskellPackages.cabal-install ];
   packages = p: [ gerber gerber-diagrams ];
 }

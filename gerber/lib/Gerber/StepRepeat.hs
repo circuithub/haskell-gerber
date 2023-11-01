@@ -1,4 +1,5 @@
-module Gerber.StepRepeat ( StepRepeat(..) ) where
+module Gerber.StepRepeat (StepRepeat (..)) where
+
 
 data StepRepeat = StepRepeat
   { xRepeats :: !Int
@@ -6,4 +7,4 @@ data StepRepeat = StepRepeat
   , xStep :: !Float
   , yStep :: !Float
   }
-  deriving ( Eq, Show )
+  deriving (Eq, Show)

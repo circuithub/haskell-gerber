@@ -1,7 +1,12 @@
 [ G04 " Ucamco copyright"
-, IngoredAttributeTF
-    "GenerationSoftware,Ucamco,UcamX,2016.04-160425"
-, IngoredAttributeTF "CreationDate,2016-04-25T00:00:00+01:00"
+, TF
+    (GenerationSoftware
+       GenerationSoftware
+         { vendor = "Ucamco"
+         , application = "UcamX"
+         , version = Just "2016.04-160425"
+         })
+, TF (CreationDate (CreationDate 2016-04-25 01:00:00 UTC))
 , FS
     PadLeading
     Format { integerPositions = 2 , decimalPositions = 6 }

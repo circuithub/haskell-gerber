@@ -1,80 +1,108 @@
-cabal-version:       2.4
-name:                gerber
-version:             0.3.0.0
-license:             MIT
-license-file:        LICENSE
-author:              Oliver Charles
-maintainer:          ollie@ocharles.org.uk
-category:            Data
-build-type:          Simple
-extra-source-files:  README.md, ChangeLog.md
+cabal-version:      2.4
+name:               gerber
+version:            0.3.0.0
+license:            MIT
+license-file:       LICENSE
+author:             Oliver Charles
+maintainer:         ollie@ocharles.org.uk
+category:           Data
+build-type:         Simple
 extra-source-files:
-  test-data/**/*.golden
+  ChangeLog.md
+  README.md
+
+extra-source-files:
   test-data/**/*.gbr
+  test-data/**/*.golden
 
 library
-  exposed-modules:     Gerber.ApertureDefinition
-                       Gerber.Command
-                       Gerber.DCodeNumber
-                       Gerber.MacroDefinition
-                       Gerber.EncodedDecimal
-                       Gerber.Evaluate
-                       Gerber.Evaluate.Edge
-                       Gerber.Evaluate.GraphicsState
-                       Gerber.Evaluate.GraphicsState.ApertureEntry
-                       Gerber.Evaluate.GraphicsState.InterpolationMode
-                       Gerber.Evaluate.GraphicsState.StackStream
-                       Gerber.Flash
-                       Gerber.Format
-                       Gerber.Grammar
-                       Gerber.Mirroring
-                       Gerber.Movement
-                       Gerber.Padding
-                       Gerber.Polarity
-                       Gerber.StepRepeat
-                       Gerber.Unit
-  build-depends:       base
-                     , containers
-                     , foldl
-                     , generic-deriving
-                     , linear
-                     , megaparsec
-                     , monoid-extras
-                     , mtl
-                     , text
-  hs-source-dirs:      lib
-  default-language:    Haskell2010
-  ghc-options:        -Weverything
-                      -Wno-missing-import-lists -Wno-missing-export-lists -Wno-implicit-prelude
-                      -Wno-missing-deriving-strategies
-                      -Wno-missing-local-signatures -Wno-monomorphism-restriction
-                      -Wno-unsafe -Wno-safe -Wno-all-missed-specialisations
-                      -Wno-missing-safe-haskell-mode
-                      -Wno-prepositive-qualified-module
+  exposed-modules:
+    Gerber.ApertureDefinition
+    Gerber.Attribute
+    Gerber.Attribute.Attribute
+    Gerber.Attribute.CreationDate
+    Gerber.Attribute.FileFunction
+    Gerber.Attribute.FileFunction.Copper
+    Gerber.Attribute.FileFunction.Drill
+    Gerber.Attribute.FileFunction.Index
+    Gerber.Attribute.FileFunction.Mask
+    Gerber.Attribute.FileFunction.Profile
+    Gerber.Attribute.FileFunction.Side
+    Gerber.Attribute.FilePolarity
+    Gerber.Attribute.GenerationSoftware
+    Gerber.Attribute.MD5
+    Gerber.Attribute.Part
+    Gerber.Attribute.ProjectId
+    Gerber.Command
+    Gerber.DCodeNumber
+    Gerber.EncodedDecimal
+    Gerber.Evaluate
+    Gerber.Evaluate.Edge
+    Gerber.Evaluate.GraphicsState
+    Gerber.Evaluate.GraphicsState.ApertureEntry
+    Gerber.Evaluate.GraphicsState.InterpolationMode
+    Gerber.Evaluate.GraphicsState.StackStream
+    Gerber.Flash
+    Gerber.Format
+    Gerber.Grammar
+    Gerber.MacroDefinition
+    Gerber.Mirroring
+    Gerber.Movement
+    Gerber.Padding
+    Gerber.Polarity
+    Gerber.StepRepeat
+    Gerber.Unit
+
+  build-depends:
+    , base
+    , base16-bytestring
+    , bytestring
+    , containers
+    , foldl
+    , generic-deriving
+    , linear
+    , megaparsec
+    , monoid-extras
+    , mtl
+    , text
+    , time
+    , uuid-types
+
+  hs-source-dirs:   lib
+  default-language: Haskell2010
+  ghc-options:
+    -Weverything -Wno-missing-import-lists -Wno-missing-export-lists
+    -Wno-implicit-prelude -Wno-missing-deriving-strategies
+    -Wno-missing-local-signatures -Wno-monomorphism-restriction
+    -Wno-unsafe -Wno-safe -Wno-all-missed-specialisations
+    -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module
 
 test-suite tests
-  build-depends:       base
-                     , gerber
-                     , megaparsec
-                     , text
-                     , generic-deriving
-                     , containers
-                     , monoid-extras
-                     , foldl
-                     , linear
-                     , tasty
-                     , tasty-golden
-                     , pretty-show
-                     , directory
-                     , tasty-hedgehog
-                     , hedgehog-classes
-                     , hedgehog
-                     , bytestring
+  build-depends:
+    , base
+    , bytestring
+    , containers
+    , directory
+    , foldl
+    , generic-deriving
+    , gerber
+    , hedgehog
+    , hedgehog-classes
+    , linear
+    , megaparsec
+    , monoid-extras
+    , pretty-show
+    , tasty
+    , tasty-golden
+    , tasty-hedgehog
+    , text
 
-  main-is:             Main.hs
-  hs-source-dirs:      tests
-  type:                exitcode-stdio-1.0
-  default-language:    Haskell2010
-  other-modules:       Gerber.Grammar.Tests
-                       Gerber.Evaluate.GraphicsState.StackStream.Tests
-  Ghc-options:         -Wall
+  main-is:          Main.hs
+  hs-source-dirs:   tests
+  type:             exitcode-stdio-1.0
+  default-language: Haskell2010
+  other-modules:
+    Gerber.Evaluate.GraphicsState.StackStream.Tests
+    Gerber.Grammar.Tests
+
+  ghc-options:      -Wall

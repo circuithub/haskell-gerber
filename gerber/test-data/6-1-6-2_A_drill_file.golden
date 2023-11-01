@@ -3,22 +3,26 @@
     Format { integerPositions = 3 , decimalPositions = 6 }
     Format { integerPositions = 3 , decimalPositions = 6 }
 , MO MM
-, IngoredAttributeTF "FileFunction,Plated,1,8,PTH"
-, IngoredAttributeTF "Part,Single"
+, TF
+    (FileFunction
+       (Plated
+          Drill
+            { from = Index 1 , to = Index 8 , via = PTH , type_ = Nothing }))
+, TF (Part Single)
 , LP Dark
-, IngoredAttributeTA "DrillTolerance,0.002,0.001"
-, IngoredAttributeTA "AperFunction,ComponentDrill"
+, TA ".DrillTolerance" [ "0.002" , "0.001" ]
+, TA ".AperFunction" [ "ComponentDrill" ]
 , AD
     10
     (Circle
        CircleModifiers { diameter = 0.14 , circleHoleDiameter = Nothing })
-, IngoredAttributeTA "AperFunction,Other,SpecialDrill"
+, TA ".AperFunction" [ "Other" , "SpecialDrill" ]
 , AD
     11
     (Circle
        CircleModifiers { diameter = 0.24 , circleHoleDiameter = Nothing })
-, IngoredAttributeTA "DrillTolerance,0.15,0.15"
-, IngoredAttributeTA "AperFunction,MechanicalDrill"
+, TA ".DrillTolerance" [ "0.15" , "0.15" ]
+, TA ".AperFunction" [ "MechanicalDrill" ]
 , AD
     12
     (Circle
@@ -27,8 +31,8 @@
     13
     (Circle
        CircleModifiers { diameter = 0.22 , circleHoleDiameter = Nothing })
-, IngoredAttributeTD "AperFunction"
-, IngoredAttributeTD "DrillTolerance"
+, TD (Just ".AperFunction")
+, TD (Just ".DrillTolerance")
 , G01
 , D 10
 , D03

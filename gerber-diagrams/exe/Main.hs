@@ -1,13 +1,16 @@
-{-# language ApplicativeDo #-}
-{-# language RecordWildCards #-}
+{-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Main where
 
--- diagrams
-import qualified Diagrams.Prelude as Diagrams
+-- 
+import RIO
 
--- diagrams-cairo
+-- diagrams-gi-cairo
 import qualified Diagrams.Backend.Cairo
+
+-- diagrams-lib
+import qualified Diagrams.Prelude as Diagrams
 
 -- foldl
 import qualified Control.Foldl as L
@@ -17,20 +20,17 @@ import qualified Gerber.Evaluate as Gerber
 import qualified Gerber.Grammar as Gerber
 
 -- gerber-diagrams
-import Gerber.Diagrams ( gerberToDiagram )
+import Gerber.Diagrams (gerberToDiagram)
 
 -- optparse-applicative
 import qualified Options.Applicative as OptParse
-
--- rio
-import RIO
 
 -- text
 import qualified Data.Text.IO as StrictText
 
 
 data CLIOptions = CLIOptions
-  { gerberFilePaths :: ![ FilePath ]
+  { gerberFilePaths :: ![FilePath]
   , scale :: !Double
   , outputPath :: !FilePath
   }
@@ -57,7 +57,6 @@ cliOptionsParser = do
           ]
       )
 
-
   gerberFilePaths <-
     some
       ( OptParse.strArgument
@@ -79,48 +78,46 @@ mainWith CLIOptions{..} = do
       ( traverse
           ( \path -> do
               res <-
-                tryAny ( StrictText.readFile path )
+                tryAny (StrictText.readFile path)
 
               case res of
                 Left e -> do
                   putStrLn
-                    ( "Could not parse '" <> path <> "': " <> displayException e )
+                    ("Could not parse '" <> path <> "': " <> displayException e)
                   return Nothing
-
                 Right source ->
                   case Gerber.parseGerber source of
                     Left e -> do
-                      putStrLn ( "Could not parse '" <> path <> "':" )
-                      putStrLn ( displayException e )
+                      putStrLn ("Could not parse '" <> path <> "':")
+                      putStrLn (displayException e)
                       return Nothing
-
                     Right ok ->
-                      return ( Just ok )
+                      return (Just ok)
           )
           gerberFilePaths
       )
 
   let
     diagrams =
-      map ( L.fold ( Gerber.evaluate gerberToDiagram ) ) gerbers
+      map (L.fold (Gerber.evaluate gerberToDiagram)) gerbers
 
     d =
       mconcat
         ( zipWith
-            ( \col -> Diagrams.lc col . Diagrams.fc col )
-            ( cycle [ Diagrams.red, Diagrams.green, Diagrams.blue ] )
+            (\col -> Diagrams.lc col . Diagrams.fc col)
+            (cycle [Diagrams.red, Diagrams.green, Diagrams.blue])
             diagrams
         )
 
   Diagrams.Backend.Cairo.renderCairo
     outputPath
-    ( Diagrams.mkWidth ( scale * Diagrams.width d ) )
-    ( Diagrams.bg Diagrams.white ( Diagrams.frame 1.1 d ) )
+    (Diagrams.mkWidth (scale * Diagrams.width d))
+    (Diagrams.bg Diagrams.white (Diagrams.frame 1.1 d))
 
 
 main :: IO ()
 main = do
   cliOptions <-
-    OptParse.execParser ( OptParse.info cliOptionsParser mempty )
+    OptParse.execParser (OptParse.info cliOptionsParser mempty)
 
   mainWith cliOptions

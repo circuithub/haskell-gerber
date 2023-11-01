@@ -1,72 +1,75 @@
-cabal-version:       2.4
-name:                gerber-diagrams
-version:             0.2.0.0
-license:             MIT
-license-file:        LICENSE
-author:              Oliver Charles
-maintainer:          ollie@ocharles.org.uk
-category:            Data
-build-type:          Simple
-extra-source-files:  ChangeLog.md
+cabal-version:      2.4
+name:               gerber-diagrams
+version:            0.2.0.0
+license:            MIT
+license-file:       LICENSE
+author:             Oliver Charles
+maintainer:         ollie@ocharles.org.uk
+category:           Data
+build-type:         Simple
+extra-source-files: ChangeLog.md
 extra-source-files:
-  test-data/**/*.png
   test-data/**/*.gbr
+  test-data/**/*.png
 
 library
-  exposed-modules:     Gerber.Diagrams
-  build-depends:       base
-                     , gerber
-                     , linear
-                     , diagrams-lib
-                     , diagrams-contrib
-  hs-source-dirs:      lib
-  default-language:    Haskell2010
-  ghc-options:        -Weverything
-                      -Wno-missing-import-lists -Wno-missing-export-lists -Wno-implicit-prelude
-                      -Wno-missing-deriving-strategies
-                      -Wno-missing-local-signatures -Wno-monomorphism-restriction
-                      -Wno-unsafe -Wno-safe -Wno-all-missed-specialisations
-                      -Wno-missing-safe-haskell-mode
-                      -Wno-prepositive-qualified-module
+  exposed-modules:  Gerber.Diagrams
+  build-depends:
+    , base
+    , diagrams-contrib
+    , diagrams-lib
+    , gerber
+    , linear
+
+  hs-source-dirs:   lib
+  default-language: Haskell2010
+  ghc-options:
+    -Weverything -Wno-missing-import-lists -Wno-missing-export-lists
+    -Wno-implicit-prelude -Wno-missing-deriving-strategies
+    -Wno-missing-local-signatures -Wno-monomorphism-restriction
+    -Wno-unsafe -Wno-safe -Wno-all-missed-specialisations
+    -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module
 
 executable render-gerbers
-  hs-source-dirs: exe
+  hs-source-dirs:   exe
   build-depends:
-                base
-              , gerber
-              , gerber-diagrams
-              , optparse-applicative
-              , rio
-              , text
-              , diagrams-gi-cairo
-              , diagrams-lib
-              , foldl
+    , base
+    , diagrams-gi-cairo
+    , diagrams-lib
+    , foldl
+    , gerber
+    , gerber-diagrams
+    , optparse-applicative
+    , rio
+    , text
+
   default-language: Haskell2010
-  ghc-options: -Wall
-  main-is: Main.hs
+  ghc-options:      -Wall
+  main-is:          Main.hs
 
 test-suite tests
-  build-depends:       base
-                     , gerber
-                     , diagrams-lib
-                     , gerber-diagrams
-                     , diagrams-cairo
-                     , megaparsec
-                     , text
-                     , generic-deriving
-                     , containers
-                     , monoid-extras
-                     , foldl
-                     , linear
-                     , tasty
-                     , tasty-golden
-                     , pretty-show
-                     , directory
-                     , bytestring
+  build-depends:
+    , base
+    , bytestring
+    , containers
+    , diagrams-cairo
+    , diagrams-lib
+    , directory
+    , foldl
+    , generic-deriving
+    , gerber
+    , gerber-diagrams
+    , linear
+    , megaparsec
+    , monoid-extras
+    , pretty-show
+    , tasty
+    , tasty-golden
+    , text
 
-  main-is:             Main.hs
-  hs-source-dirs:      tests
-  type:                exitcode-stdio-1.0
-  default-language:    Haskell2010
-  other-modules:       Gerber.Diagrams.Tests
-  ghc-options:         -Wall
+  main-is:          Main.hs
+  hs-source-dirs:   tests
+  type:             exitcode-stdio-1.0
+  default-language: Haskell2010
+  other-modules:    Gerber.Diagrams.Tests
+  ghc-options:      -Wall

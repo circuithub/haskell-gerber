@@ -1,5 +1,14 @@
-{ mkDerivation, base, diagrams-cairo, diagrams-lib, foldl, gerber
-, linear, optparse-applicative, rio, stdenv, text
+{ mkDerivation
+, base
+, diagrams-cairo
+, diagrams-lib
+, foldl
+, gerber
+, linear
+, optparse-applicative
+, rio
+, stdenv
+, text
 }:
 mkDerivation {
   pname = "gerber-diagrams";
@@ -9,8 +18,14 @@ mkDerivation {
   isExecutable = true;
   libraryHaskellDepends = [ base diagrams-lib gerber linear ];
   executableHaskellDepends = [
-    base diagrams-cairo diagrams-lib foldl gerber optparse-applicative
-    rio text
+    base
+    diagrams-cairo
+    diagrams-lib
+    foldl
+    gerber
+    optparse-applicative
+    rio
+    text
   ];
   license = stdenv.lib.licenses.mit;
 }

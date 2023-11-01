@@ -693,7 +693,7 @@
        CircleModifiers
          { diameter = 2.7559e-2 , circleHoleDiameter = Nothing })
 , IP
-, G04 "gbs"
+, LN "gbs"
 , LP Dark
 , G75
 , D 10

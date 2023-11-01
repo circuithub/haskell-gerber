@@ -1,14 +1,22 @@
-{-# language DeriveTraversable #-}
+{-# LANGUAGE DeriveTraversable #-}
+
 module Gerber.MacroDefinition where
 
-import Data.Text (Text)
-import Linear.V2 (V2)
+-- base
 import Data.List.NonEmpty (NonEmpty)
+
+-- linear
+import Linear.V2 (V2)
+
+-- text
+import Data.Text (Text)
+
 
 data Exposure
   = ExposureOn
   | ExposureOff
   deriving (Show, Read, Eq, Ord, Enum, Bounded)
+
 
 data Modifier
   = Decimal Float
@@ -22,12 +30,14 @@ data Modifier
   | Divide Modifier Modifier
   deriving (Show, Read, Eq, Ord)
 
+
 data Definition exposure a
   = Variable !Int !a
   | Comment !Text
   | Primitive !(Primitive exposure a)
   | InvalidDefinition !Int Text
   deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
+
 
 data Primitive exposure a
   = Circle !(CircleModifiers exposure a)
@@ -39,6 +49,7 @@ data Primitive exposure a
   | Thermal !(ThermalModifiers a)
   deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
 
+
 data CircleModifiers exposure a = CircleModifiers
   { circleExposure :: exposure
   , diameter :: !a
@@ -46,6 +57,7 @@ data CircleModifiers exposure a = CircleModifiers
   , circleRotation :: !(Maybe a)
   }
   deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
+
 
 data VectorLineModifiers exposure a = VectorLineModifiers
   { vectorLineExposure :: exposure
@@ -56,6 +68,7 @@ data VectorLineModifiers exposure a = VectorLineModifiers
   }
   deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
 
+
 data CenterLineModifiers exposure a = CenterLineModifiers
   { centerLineExposure :: exposure
   , centerLineWidth :: !a
@@ -64,6 +77,7 @@ data CenterLineModifiers exposure a = CenterLineModifiers
   , centerLineRotation :: !a
   }
   deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
+
 
 data OutlineModifiers exposure a = OutlineModifiers
   { outlineExposure :: exposure
@@ -82,6 +96,7 @@ data PolygonModifiers exposure a = PolygonModifiers
   }
   deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
 
+
 data MoireModifiers a = MoireModifiers
   { moireCenter :: !(V2 a)
   , outerRingDiameter :: !a
@@ -93,6 +108,7 @@ data MoireModifiers a = MoireModifiers
   , moireRotation :: !a
   }
   deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
+
 
 data ThermalModifiers a = ThermalModifiers
   { thermalCenter :: !(V2 a)

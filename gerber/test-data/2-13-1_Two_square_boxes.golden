@@ -4,7 +4,7 @@
     Format { integerPositions = 2 , decimalPositions = 6 }
     Format { integerPositions = 2 , decimalPositions = 6 }
 , MO MM
-, IngoredAttributeTF "Part,Other,example"
+, TF (Part (Other "example"))
 , LP Dark
 , AD
     10

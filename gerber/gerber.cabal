@@ -19,6 +19,7 @@ library
   exposed-modules:
     Gerber.ApertureDefinition
     Gerber.Attribute
+    Gerber.Attribute.AperFunction
     Gerber.Attribute.Attribute
     Gerber.Attribute.CreationDate
     Gerber.Attribute.FileFunction

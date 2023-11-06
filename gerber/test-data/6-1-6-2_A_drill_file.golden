@@ -10,19 +10,23 @@
             { from = Index 1 , to = Index 8 , via = PTH , type_ = Nothing }))
 , TF (Part Single)
 , LP Dark
-, TA ".DrillTolerance" [ "0.002" , "0.001" ]
-, TA ".AperFunction" [ "ComponentDrill" ]
+, TA
+    (DrillTolerance
+       Tolerance { plusTolerance = 2.0e-3 , minusTolerance = 1.0e-3 })
+, TA (AperFunction (ComponentDrill Nothing))
 , AD
     10
     (Circle
        CircleModifiers { diameter = 0.14 , circleHoleDiameter = Nothing })
-, TA ".AperFunction" [ "Other" , "SpecialDrill" ]
+, TA (AperFunction (Other "SpecialDrill"))
 , AD
     11
     (Circle
        CircleModifiers { diameter = 0.24 , circleHoleDiameter = Nothing })
-, TA ".DrillTolerance" [ "0.15" , "0.15" ]
-, TA ".AperFunction" [ "MechanicalDrill" ]
+, TA
+    (DrillTolerance
+       Tolerance { plusTolerance = 0.15 , minusTolerance = 0.15 })
+, TA (AperFunction (MechanicalDrill Nothing))
 , AD
     12
     (Circle

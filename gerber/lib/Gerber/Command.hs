@@ -7,7 +7,7 @@ module Gerber.Command (
 
 -- gerber
 import Gerber.ApertureDefinition (ApertureDefinition)
-import Gerber.Attribute (FileAttribute)
+import Gerber.Attribute (ApertureAttribute, FileAttribute)
 import Gerber.DCodeNumber (DCodeNumber)
 import Gerber.Format (Format)
 import Gerber.MacroDefinition (Definition, Modifier)
@@ -40,6 +40,7 @@ data Command
   | G75
   | G71
   | IP
+  | IN !StrictText.Text
   | LP !Polarity
   | MO !Unit
   | OF !(Maybe Float) !(Maybe Float)
@@ -56,7 +57,7 @@ data Command
   | LS !Float
   | TF !FileAttribute
   | TO !StrictText.Text ![StrictText.Text]
-  | TA !StrictText.Text ![StrictText.Text]
+  | TA !ApertureAttribute
   | TD !(Maybe StrictText.Text)
   | LN !StrictText.Text
   deriving (Eq, Show)

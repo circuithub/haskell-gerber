@@ -378,6 +378,8 @@ step evaluator state
             )
       Command.IP{} ->
         mempty
+      Command.IN _ ->
+        mempty
       Command.G74{} ->
         mempty
       Command.G75{} ->
@@ -449,7 +451,7 @@ step evaluator state
       Command.TF _ ->
         -- Non graphics affecting meta information
         mempty
-      Command.TA _ _ ->
+      Command.TA _ ->
         -- Non graphics affecting meta information
         mempty
       Command.TO _ _ ->

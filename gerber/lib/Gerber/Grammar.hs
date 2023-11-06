@@ -20,6 +20,7 @@ import Text.Read (readMaybe)
 -- gerber
 import qualified Gerber.ApertureDefinition as Gerber
 import qualified Gerber.Attribute
+import qualified Gerber.Attribute.AperFunction as AperFunction
 import qualified Gerber.Attribute.CreationDate as Gerber
 import qualified Gerber.Attribute.FileFunction as FileFunction
 import qualified Gerber.Attribute.FileFunction.Copper as Gerber
@@ -43,7 +44,7 @@ import qualified Gerber.Movement as Gerber
 import qualified Gerber.Padding as Padding
 import qualified Gerber.Polarity as Gerber
 import qualified Gerber.StepRepeat as Gerber
-import qualified Gerber.Unit as Gerber
+import qualified Gerber.Unit
 
 -- linear
 import Linear.V2 (V2 (..))
@@ -91,16 +92,13 @@ int =
 
 index :: Megaparsec.MonadParsec e StrictText.Text m => m FileFunction.Index
 index =
-  FileFunction.Index <$> read . StrictText.unpack <$> Megaparsec.takeWhile1P Nothing isDigit
+  Megaparsec.label "index" $
+    FileFunction.Index <$> read . StrictText.unpack <$> Megaparsec.takeWhile1P Nothing isDigit
 
 
 string :: Megaparsec.MonadParsec e StrictText.Text m => m StrictText.Text
-string = StrictText.pack <$> many (Megaparsec.noneOf ['*', '%'])
+string = Megaparsec.label "string" $ StrictText.pack <$> many (Megaparsec.noneOf ['*', '%'])
 
-
--- string :: Megaparsec.MonadParsec e StrictText.Text m => m StrictText.Text
--- string =
---   Megaparsec.takeWhileP Nothing isStringChar
 
 newlines :: Megaparsec.MonadParsec e StrictText.Text m => m ()
 newlines =
@@ -108,17 +106,12 @@ newlines =
 
 
 endOfBlock :: Megaparsec.MonadParsec e StrictText.Text m => m ()
-endOfBlock = do
-  _ <-
-    Megaparsec.char '*'
-
-  newlines
-
-  return ()
+endOfBlock =
+  Megaparsec.char '*' *> newlines
 
 
 format :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Format
-format = do
+format = Megaparsec.label "format" $ do
   integerPositions <-
     read . pure <$> Megaparsec.oneOf ['1' .. '6'] <?> "[1-6]"
 
@@ -129,7 +122,7 @@ format = do
 
 
 fs :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
-fs = do
+fs = Megaparsec.label "FS" $ do
   _ <- Megaparsec.string "%FS"
   padding <-
     asum
@@ -147,17 +140,18 @@ fs = do
 
 mo :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 mo =
-  Gerber.MO
+  Megaparsec.label "MO"
+    $ Gerber.MO
     <$ Megaparsec.string "%MO"
-    <*> ( Gerber.MM <$ Megaparsec.string "MM"
-            <|> Gerber.IN <$ Megaparsec.string "IN"
+    <*> ( Gerber.Unit.MM <$ Megaparsec.string "MM"
+            <|> Gerber.Unit.IN <$ Megaparsec.string "IN"
         )
     <* Megaparsec.string "*%"
     <* newlines
 
 
 ad :: forall e m. Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
-ad = do
+ad = Megaparsec.label "AD" $ do
   let
     dCodeNumber =
       Gerber.DCodeNumber <$> int
@@ -229,6 +223,7 @@ ad = do
 
 g01 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 g01 =
+  Megaparsec.label "G01" $
   Gerber.G01
     <$ Megaparsec.string "G01"
     <* endOfBlock
@@ -236,6 +231,7 @@ g01 =
 
 g03 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 g03 =
+  Megaparsec.label "G03" $
   Gerber.G03
     <$ Megaparsec.string "G03"
     <* endOfBlock
@@ -243,6 +239,7 @@ g03 =
 
 g36 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 g36 =
+  Megaparsec.label "G36" $
   Gerber.G36
     <$ Megaparsec.string "G36"
     <* endOfBlock
@@ -250,6 +247,7 @@ g36 =
 
 g37 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 g37 =
+  Megaparsec.label "G37" $
   Gerber.G37
     <$ Megaparsec.string "G37"
     <* endOfBlock
@@ -257,6 +255,7 @@ g37 =
 
 g71 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 g71 =
+  Megaparsec.label "G71" $
   Gerber.G71
     <$ Megaparsec.string "G71"
     <* endOfBlock
@@ -264,6 +263,7 @@ g71 =
 
 g74 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 g74 =
+  Megaparsec.label "G74" $
   Gerber.G74
     <$ Megaparsec.string "G74"
     <* endOfBlock
@@ -271,6 +271,7 @@ g74 =
 
 g75 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 g75 =
+  Megaparsec.label "G75" $
   Gerber.G75
     <$ Megaparsec.string "G75"
     <* endOfBlock
@@ -278,6 +279,7 @@ g75 =
 
 m02 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 m02 =
+  Megaparsec.label "M02" $
   Gerber.M02
     <$ Megaparsec.string "M02"
     <* endOfBlock
@@ -285,26 +287,27 @@ m02 =
 
 g04 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 g04 =
+  Megaparsec.label "G04" $
   Gerber.G04
     <$ (Megaparsec.string "G04" <|> Megaparsec.string "LN" <|> Megaparsec.string "IN")
     <*> string
     <* Megaparsec.char '*'
     <* newlines
-    <?> "G04"
 
 
 lp :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 lp =
+  Megaparsec.label "LP" $
   Gerber.LP
     <$ Megaparsec.string "%LP"
     <*> polarity
     <* Megaparsec.string "*%"
     <* newlines
-    <?> "lp"
 
 
 polarity :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Polarity
 polarity =
+  Megaparsec.label "polarity" $
   asum
     [ Gerber.Clear <$ Megaparsec.char 'C'
     , Gerber.Dark <$ Megaparsec.char 'D'
@@ -363,6 +366,7 @@ stepRepeat =
 
 d01 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 d01 =
+  Megaparsec.label "D01" $
   Gerber.D01
     <$> movement
     <* optional (Megaparsec.string "D01" <|> Megaparsec.string "D1")
@@ -371,6 +375,7 @@ d01 =
 
 d02 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 d02 =
+  Megaparsec.label "D02" $
   Gerber.D02
     <$> movement
     <* (Megaparsec.string "D02" <|> Megaparsec.string "D2")
@@ -379,6 +384,7 @@ d02 =
 
 d03 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 d03 =
+  Megaparsec.label "D03" $
   Gerber.D03
     <$> movement
     <* (Megaparsec.string "D03" <|> Megaparsec.string "D3")
@@ -387,6 +393,7 @@ d03 =
 
 am :: forall e m. Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 am =
+  Megaparsec.label "AM" $
   Gerber.AM
     <$ Megaparsec.string "%AM"
     <*> (StrictText.pack <$> Megaparsec.someTill Megaparsec.anySingle endOfBlock')
@@ -588,6 +595,7 @@ am =
 
 sr :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 sr =
+  Megaparsec.label "SR" $
   Gerber.SR
     <$ Megaparsec.string "%SR"
     <*> stepRepeat
@@ -597,6 +605,7 @@ sr =
 
 srEnd :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 srEnd =
+  Megaparsec.label "SR end" $
   Gerber.SR_End
     <$ Megaparsec.string "%SR"
     <* Megaparsec.string "*%"
@@ -605,6 +614,7 @@ srEnd =
 
 sf :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 sf =
+  Megaparsec.label "SF" $
   Gerber.SF
     <$ Megaparsec.string "SF"
     <* optional (Megaparsec.string "A" *> float >>= guard . (== 1))
@@ -614,6 +624,7 @@ sf =
 
 mi :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 mi =
+  Megaparsec.label "MI" $
   Gerber.MI
     <$ Megaparsec.string "MI"
     <* optional (Megaparsec.string "A" *> Megaparsec.string "0")
@@ -623,15 +634,27 @@ mi =
 
 of_ :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 of_ =
+  Megaparsec.label "OF" $
   Gerber.OF
-    <$ Megaparsec.string "OF"
+    <$ Megaparsec.string "%OF"
     <*> optional (Megaparsec.string "A" *> float)
     <*> optional (Megaparsec.string "B" *> float)
-    <* endOfBlock
+    <* Megaparsec.string "*%"
+    <* newlines
+
+in_ :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
+in_ =
+  Megaparsec.label "IN" $
+  Gerber.IN
+    <$ Megaparsec.string "%IN"
+    <*> string
+    <* Megaparsec.string "*%"
+    <* newlines
 
 
 ip :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 ip =
+  Megaparsec.label "IP" $
   Gerber.IP
     <$ Megaparsec.string "%IP"
     <* (Megaparsec.string "POS" <|> Megaparsec.string "NEG")
@@ -641,6 +664,7 @@ ip =
 
 ab :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 ab =
+  Megaparsec.label "AB" $
   Gerber.AB
     <$ Megaparsec.string "%ABD"
     <*> (Gerber.DCodeNumber <$> int)
@@ -650,6 +674,7 @@ ab =
 
 abEnd :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 abEnd =
+  Megaparsec.label "AB end" $
   Gerber.AB_End
     <$ Megaparsec.string "%AB"
     <* Megaparsec.string "*%"
@@ -658,6 +683,7 @@ abEnd =
 
 lm :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 lm =
+  Megaparsec.label "LM" $
   Gerber.LM
     <$ Megaparsec.string "%LM"
     <*> (asum . map Megaparsec.try)
@@ -672,6 +698,7 @@ lm =
 
 lr :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 lr =
+  Megaparsec.label "LR" $
   Gerber.LR
     <$ Megaparsec.string "%LR"
     <*> float
@@ -681,6 +708,7 @@ lr =
 
 ls :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 ls =
+  Megaparsec.label "LS" $
   Gerber.LS
     <$ Megaparsec.string "%LS"
     <*> float
@@ -693,8 +721,7 @@ command =
   asum
     ( map
         Megaparsec.try
-        [ ad
-        , g01
+        [ g01
         , g04
         , d
         , d01
@@ -706,7 +733,6 @@ command =
         , g75
         , g03
         , g71
-        , of_
         , sf
         , mi
         ]
@@ -714,7 +740,7 @@ command =
 
 
 to :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
-to = do
+to = Megaparsec.label "TO" $ do
   _ <- Megaparsec.string "%TO"
   name <- objectAttributeName
   fields <- Megaparsec.many field
@@ -726,7 +752,7 @@ to = do
 
 
 tf :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
-tf = do
+tf = Megaparsec.label "TF" $ do
   _ <- Megaparsec.string "%TF."
   attr <- fileAttribute
   _ <- Megaparsec.string "*%"
@@ -757,7 +783,7 @@ username =
     otherChar =
       Megaparsec.char '.' <|> Megaparsec.char '_' <|> lowerUpper <|> Megaparsec.oneOf ['0' .. '9']
    in
-    do
+    Megaparsec.label "username" $ do
       first <- startChar
       rest <- many otherChar
       pure $ StrictText.pack (first : rest)
@@ -776,7 +802,6 @@ fileAttribute =
       , generationSoftware
       , Gerber.Attribute.ProjectId <$> Gerber.ProjectId.projectIdParser
       , Gerber.Attribute.MD5 <$> Gerber.MD5.parser
-      -- , username
       ]
   where
     part = do
@@ -939,16 +964,129 @@ fileAttribute =
       Megaparsec.string "SameCoordinates" *> optional field
 
 
-apertureAttributeName :: Megaparsec.MonadParsec e StrictText.Text m => m StrictText.Text
-apertureAttributeName =
+apertureAttribute :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Attribute.ApertureAttribute
+apertureAttribute =
   asum $
     map
       Megaparsec.try
-      [ Megaparsec.string ".AperFunction"
-      , Megaparsec.string ".DrillTolerance"
-      , Megaparsec.string ".FlashText"
-      , username
+      [ aperFunctionParser
+      , fmap Gerber.Attribute.DrillTolerance
+        $ Gerber.Attribute.Tolerance
+          <$> (Megaparsec.string "DrillTolerance," *> float)
+          <*> (Megaparsec.char ',' *> float)
+      , flashTextParser
       ]
+
+  where
+    aperFunctionParser = do
+      _ <- Megaparsec.string "AperFunction,"
+      fmap Gerber.Attribute.AperFunction
+        $ asum
+        $ map Megaparsec.try
+        [ viaDrill
+        , AperFunction.BackDrill <$ Megaparsec.string "BackDrill"
+        , componentDrill
+        , mechanicalDrill
+        , AperFunction.CastellatedDrill <$ Megaparsec.string "CastellatedDrill"
+        , AperFunction.OtherDrill <$> (Megaparsec.string "OtherDrill" *> field)
+        , AperFunction.ComponentPad <$ Megaparsec.string "ComponentPad"
+        , AperFunction.SMDPad <$> (Megaparsec.string "SMDPad," *> padDefinitionParser)
+        , AperFunction.BGAPad <$> (Megaparsec.string "BGAPad," *> padDefinitionParser)
+        , AperFunction.ConnectorPad <$ Megaparsec.string "ConnectorPad"
+        , AperFunction.HeatsinkPad <$ Megaparsec.string "HeatsinkPad"
+        , AperFunction.ViaPad <$ Megaparsec.string "ViaPad"
+        , AperFunction.TestPad <$ Megaparsec.string "TestPad"
+        , AperFunction.CastellatedPad <$ Megaparsec.string "CastellatedPad"
+        , AperFunction.FiducialPad <$> (Megaparsec.string "FiducialPad," *> fidSpecifierParser)
+        , AperFunction.ThermalReliefPad <$ Megaparsec.string "ThermalReliefPad"
+        , AperFunction.WasherPad <$ Megaparsec.string "WasherPad"
+        , AperFunction.AntiPad <$ Megaparsec.string "AntiPad"
+        , AperFunction.OtherPad <$> (Megaparsec.string "OtherPad" *> field)
+        , AperFunction.Conductor <$ Megaparsec.string "Conductor"
+        , AperFunction.EtchedComponent <$ Megaparsec.string "EtchedComponent"
+        , AperFunction.NonConductor <$ Megaparsec.string "NonConductor"
+        , AperFunction.CopperBalancing <$ Megaparsec.string "CopperBalancing"
+        , AperFunction.Border <$ Megaparsec.string "Border"
+        , AperFunction.OtherCopper <$> (Megaparsec.string "OtherCopper" *> field)
+        , AperFunction.ComponentMain <$ Megaparsec.string "ComponentMain"
+        , AperFunction.ComponentOutline <$> (Megaparsec.string "ComponentOutline," *> outlineTypeParser)
+        , AperFunction.ComponentPin <$ Megaparsec.string "ComponentPin"
+        , AperFunction.Profile <$ Megaparsec.string "Profile"
+        , AperFunction.NonMaterial <$ Megaparsec.string "NonMaterial"
+        , AperFunction.Material <$ Megaparsec.string "Material"
+        , AperFunction.Other <$> (Megaparsec.string "Other" *> field)
+        ]
+
+    viaDrill = do
+      _ <- Megaparsec.string "ViaDrill"
+      ipc4761 <- optional (Megaparsec.char ',' *> ipc4761Parser)
+      pure $ AperFunction.ViaDrill ipc4761
+
+    ipc4761Parser = asum $ map Megaparsec.try
+      [ AperFunction.Ia <$ Megaparsec.string "Ia"
+      , AperFunction.Ib <$ Megaparsec.string "Ib"
+      , AperFunction.IIa <$ Megaparsec.string "IIa"
+      , AperFunction.IIb <$ Megaparsec.string "IIb"
+      , AperFunction.IIIa <$ Megaparsec.string "IIIa"
+      , AperFunction.IIIb <$ Megaparsec.string "IIIb"
+      , AperFunction.IVa <$ Megaparsec.string "IVa"
+      , AperFunction.IVb <$ Megaparsec.string "IVb"
+      , AperFunction.V <$ Megaparsec.string "V"
+      , AperFunction.VI <$ Megaparsec.string "VI"
+      , AperFunction.VII <$ Megaparsec.string "VII"
+      , AperFunction.None <$ Megaparsec.string "None"
+      ]
+
+    componentDrill = do
+      _ <- Megaparsec.string "ComponentDrill"
+      pressfit <- optional $ (AperFunction.PressFit <$ Megaparsec.string ",PressFit")
+      pure $ AperFunction.ComponentDrill pressfit
+
+    mechanicalDrill = do
+      _ <- Megaparsec.string "MechanicalDrill"
+      purpose <-
+        optional $ asum $ map Megaparsec.try
+          [ AperFunction.Tooling <$ Megaparsec.string ",Tooling"
+          , AperFunction.Breakout <$ Megaparsec.string ",Breakout"
+          , AperFunction.OtherPurpose <$ Megaparsec.string ",Other"
+          ]
+      pure $ AperFunction.MechanicalDrill purpose
+
+    padDefinitionParser = asum $ map Megaparsec.try
+      [ AperFunction.CuDef <$ Megaparsec.string "CuDef"
+      , AperFunction.SMDef <$ Megaparsec.string "SMDef"
+      ]
+
+    fidSpecifierParser = asum $ map Megaparsec.try
+      [ AperFunction.Local <$ Megaparsec.string "Local"
+      , AperFunction.Global <$ Megaparsec.string "Global"
+      , AperFunction.Panel <$ Megaparsec.string "Panel"
+      ]
+
+    outlineTypeParser = asum $ map Megaparsec.try
+      [ AperFunction.Body <$ Megaparsec.string "Body"
+      , AperFunction.Lead2Lead <$ Megaparsec.string "Lead2Lead"
+      , AperFunction.Footprint <$ Megaparsec.string "Footprint"
+      , AperFunction.Courtyard <$ Megaparsec.string "Courtyard"
+      ]
+
+    flashTextParser = do
+      _ <- Megaparsec.string "FlashText,"
+      text <- str
+      _ <- Megaparsec.char ','
+      bOrC <- asum $ map Megaparsec.try [ Megaparsec.char 'B', Megaparsec.char 'C' ]
+      _ <- Megaparsec.char ','
+      rOrM <- optional $ asum $ map Megaparsec.try [ Megaparsec.char 'R', Megaparsec.char 'M' ]
+      _ <- Megaparsec.char ','
+      font <- optional str
+      _ <- Megaparsec.char ','
+      fontSize <- optional int
+      _ <- Megaparsec.char ','
+      comment <- optional string
+      pure $ Gerber.Attribute.FlashText {..}
+        where
+          str :: Megaparsec.MonadParsec e StrictText.Text m => m StrictText.Text
+          str = StrictText.pack <$> Megaparsec.some (Megaparsec.noneOf [ '*', '%', ',' ])
 
 
 objectAttributeName :: Megaparsec.MonadParsec e StrictText.Text m => m StrictText.Text
@@ -971,20 +1109,17 @@ objectAttributeName =
       , Megaparsec.string ".CLbD"
       , Megaparsec.string ".CSup"
       , Megaparsec.string ".C" -- Placed after other options to prevent any ambiguity
-      , username
       ]
 
 
 ta :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 ta = do
-  _ <- Megaparsec.string "%TA"
-  name <- apertureAttributeName
-  fields <- Megaparsec.many field
+  _ <- Megaparsec.string "%TA."
+  attr <- asum [ apertureAttribute ]
   _ <- Megaparsec.string "*%"
-
   newlines
 
-  pure $ Gerber.TA name fields
+  pure $ Gerber.TA attr
 
 
 td :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
@@ -1009,7 +1144,8 @@ extendedCommands =
   asum $
     map
       Megaparsec.try
-      [ am
+      [ ad
+      , am
       , fs
       , lp
       , mo
@@ -1026,6 +1162,8 @@ extendedCommands =
       , srEnd
       , ip
       , ln
+      , of_
+      , in_
       ]
 
 
@@ -1062,10 +1200,6 @@ gerberFile =
     snoc xs x =
       xs ++ [x]
 
-
--- isStringChar :: Char -> Bool
--- isStringChar c =
---   c `notElem` ( "\n\r%*" :: String )
 
 parseGerber ::
   StrictText.Text ->

@@ -376,10 +376,6 @@ step evaluator state
                 { GraphicsState.inRegion = pure False
                 }
             )
-      Command.IP{} ->
-        mempty
-      Command.IN _ ->
-        mempty
       Command.G74{} ->
         mempty
       Command.G75{} ->
@@ -467,6 +463,12 @@ step evaluator state
       Command.OF _ _ ->
         -- From the specification section 7.1.8
         error "Unsupported command. The OF command is deprecated since revision I1 from December 2012."
+
+      Command.Deprecated (Command.IN _) ->
+        mempty
+      Command.Deprecated (Command.IP{}) ->
+        mempty
+
   where
     abStart a =
       ( mempty

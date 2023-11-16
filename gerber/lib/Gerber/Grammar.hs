@@ -645,7 +645,7 @@ of_ =
 in_ :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 in_ =
   Megaparsec.label "IN" $
-  Gerber.IN
+  Gerber.Deprecated . Gerber.IN
     <$ Megaparsec.string "%IN"
     <*> string
     <* Megaparsec.string "*%"
@@ -655,7 +655,7 @@ in_ =
 ip :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 ip =
   Megaparsec.label "IP" $
-  Gerber.IP
+  Gerber.Deprecated Gerber.IP
     <$ Megaparsec.string "%IP"
     <* (Megaparsec.string "POS" <|> Megaparsec.string "NEG")
     <* Megaparsec.string "*%"
@@ -763,7 +763,7 @@ tf = Megaparsec.label "TF" $ do
 
 attributeValue :: Megaparsec.MonadParsec e StrictText.Text m => m StrictText.Text
 attributeValue =
-  StrictText.pack <$> some (Megaparsec.noneOf [',', '*', '%'])
+  StrictText.pack <$> many (Megaparsec.noneOf [',', '*', '%'])
 
 
 field :: Megaparsec.MonadParsec e StrictText.Text m => m StrictText.Text

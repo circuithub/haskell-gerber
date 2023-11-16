@@ -692,7 +692,7 @@
     (Circle
        CircleModifiers
          { diameter = 2.7559e-2 , circleHoleDiameter = Nothing })
-, IP
+, Deprecated IP
 , LN "gbs"
 , LP Dark
 , G75

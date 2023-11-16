@@ -39,8 +39,6 @@ data Command
   | G74
   | G75
   | G71
-  | IP
-  | IN !StrictText.Text
   | LP !Polarity
   | MO !Unit
   | OF !(Maybe Float) !(Maybe Float)
@@ -60,4 +58,11 @@ data Command
   | TA !ApertureAttribute
   | TD !(Maybe StrictText.Text)
   | LN !StrictText.Text
+  | Deprecated DeprecatedCommand
+  deriving (Eq, Show)
+
+
+data DeprecatedCommand
+  = IN !StrictText.Text -- Deprecated since revision I4 from October 2013
+  | IP -- Deprecated since revision I4 from October 2013.
   deriving (Eq, Show)

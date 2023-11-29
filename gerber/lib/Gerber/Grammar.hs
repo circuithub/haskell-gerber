@@ -6,7 +6,10 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Gerber.Grammar (parseGerber) where
+module Gerber.Grammar
+  ( parseGerber,
+    prettyPrintError,
+  ) where
 
 -- base
 import Control.Applicative (empty, many, optional, some, (<|>))
@@ -607,8 +610,7 @@ srEnd :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 srEnd =
   Megaparsec.label "SR end" $
   Gerber.SR_End
-    <$ Megaparsec.string "%SR"
-    <* Megaparsec.string "*%"
+    <$ Megaparsec.string "%SR*%"
     <* newlines
 
 
@@ -676,8 +678,7 @@ abEnd :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 abEnd =
   Megaparsec.label "AB end" $
   Gerber.AB_End
-    <$ Megaparsec.string "%AB"
-    <* Megaparsec.string "*%"
+    <$ Megaparsec.string "%AB*%"
     <* newlines
 
 
@@ -761,13 +762,8 @@ tf = Megaparsec.label "TF" $ do
   pure $ Gerber.TF attr
 
 
-attributeValue :: Megaparsec.MonadParsec e StrictText.Text m => m StrictText.Text
-attributeValue =
-  StrictText.pack <$> many (Megaparsec.noneOf [',', '*', '%'])
-
-
 field :: Megaparsec.MonadParsec e StrictText.Text m => m StrictText.Text
-field = Megaparsec.string "," *> attributeValue
+field = StrictText.pack <$> (Megaparsec.string "," *> many (Megaparsec.noneOf [',', '*', '%']))
 
 
 username :: Megaparsec.MonadParsec e StrictText.Text m => m StrictText.Text
@@ -813,7 +809,7 @@ fileAttribute =
           , Gerber.Attribute.Part Gerber.Array <$ Megaparsec.string "Array"
           , Gerber.Attribute.Part Gerber.FabricationPanel <$ Megaparsec.string "FabricationPanel"
           , Gerber.Attribute.Part Gerber.Coupon <$ Megaparsec.string "Coupon"
-          , Gerber.Attribute.Part . Gerber.Other <$> (Megaparsec.string "Other," *> attributeValue)
+          , Gerber.Attribute.Part . Gerber.Other <$> (Megaparsec.string "Other" *> field)
           ]
 
     fileFunction = do
@@ -873,7 +869,7 @@ fileAttribute =
           , fmap FileFunction.Pads $
               (Megaparsec.string "Pads," *> sideParser)
           , fmap FileFunction.Other $
-              Megaparsec.string "Other," *> attributeValue
+              Megaparsec.string "Other" *> field
           , -- Drawing layers
             FileFunction.Drillmap <$ Megaparsec.string "Drillmap"
           , FileFunction.FabricationDrawing <$ Megaparsec.string "FabricationDrawing"
@@ -882,7 +878,7 @@ fileAttribute =
               (Megaparsec.string "AssemblyDrawing," *> sideParser)
           , FileFunction.ArrayDrawing <$ Megaparsec.string "ArrayDrawing"
           , fmap FileFunction.OtherDrawing $
-              Megaparsec.string "OtherDrawing," *> attributeValue
+              Megaparsec.string "OtherDrawing" *> field
           ]
 
     sideParser =
@@ -1206,3 +1202,10 @@ parseGerber ::
   Either (Megaparsec.ParseErrorBundle StrictText.Text Void) [Gerber.Command]
 parseGerber =
   Megaparsec.parse gerberFile "(gerber)"
+
+
+prettyPrintError ::
+  Either (Megaparsec.ParseErrorBundle StrictText.Text Void) [Gerber.Command] ->
+  Either String [Gerber.Command]
+prettyPrintError (Left errorBundle) = Left (Megaparsec.errorBundlePretty errorBundle)
+prettyPrintError (Right x) = Right x

@@ -9,6 +9,7 @@ module Gerber.Evaluate
   , evaluate
   )where
 
+import Control.Monad ((<=<))
 import Control.Monad.State hiding (state)
 import Data.Char ( intToDigit )
 import Data.Foldable ( toList )

@@ -10,6 +10,7 @@ module Gerber.Evaluate (
 ) where
 
 -- base
+import Control.Monad ((<=<))
 import Data.Char (intToDigit)
 import Data.Foldable (toList)
 import Data.Maybe (catMaybes, fromMaybe)

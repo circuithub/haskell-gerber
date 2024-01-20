@@ -6,7 +6,7 @@
          , application = "UcamX"
          , version = Just "2016.04-160425"
          })
-, TF (CreationDate (CreationDate 2016-04-25 01:00:00 UTC))
+, TF (CreationDate (CreationDate 2016-04-24 23:00:00 UTC))
 , FS
     PadLeading
     Format { integerPositions = 4 , decimalPositions = 6 }

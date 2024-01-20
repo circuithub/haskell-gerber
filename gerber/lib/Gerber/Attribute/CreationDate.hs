@@ -7,7 +7,7 @@ module Gerber.Attribute.CreationDate (
 ) where
 
 -- base
-import Control.Applicative (many)
+import Control.Applicative ((<|>), many)
 
 -- containers
 import qualified Data.Set as Set
@@ -38,6 +38,10 @@ creationDateParser = do
   _ <- Megaparsec.string "CreationDate,"
   timeText <- many (Megaparsec.noneOf ['*', '%'])
 
-  case parseTimeM True defaultTimeLocale "%FT%T%Q+%H:%M" timeText :: Maybe UTCTime of
+  let parseISO8601 t =
+        parseTimeM True defaultTimeLocale "%FT%T%QZ" t <|>
+        parseTimeM True defaultTimeLocale "%FT%T%Q%z" t
+
+  case parseISO8601 timeText of
     Nothing -> Megaparsec.fancyFailure (Set.singleton (ErrorFail $ "Cannot parse creation date: " ++ timeText))
     Just x -> pure (CreationDate x)

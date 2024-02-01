@@ -1,9 +1,9 @@
 let
   pkgs = import
     (fetchTarball {
-      name = "release-23.05";
-      url = "https://github.com/nixos/nixpkgs/archive/3238fc2e4884c03975fd0c832adbd3cc3d7fe65c.tar.gz";
-      sha256 = "1s84shi6jb7vhcvv9wvyskcwl4i46rnjwfpqdiwjy3hil0h9iim4";
+      name = "release-23.11";
+      url = "https://github.com/NixOS/nixpkgs/archive/refs/tags/23.11.tar.gz";
+      sha256 = sha256:1ndiv385w1qyb3b18vw13991fzb9wg4cl21wglk89grsfsnra41k;
     })
     { config = { allowBroken = true; }; };
 

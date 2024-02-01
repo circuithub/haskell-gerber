@@ -1,8 +1,11 @@
 module Gerber.Attribute (
-  FileAttribute (..), ApertureAttribute(..), Tolerance(..)
+  FileAttribute (..),
+  ApertureAttribute (..),
+  Tolerance (..),
 ) where
 
 -- gerber
+import Gerber.Attribute.AperFunction
 import Gerber.Attribute.Attribute
 import Gerber.Attribute.CreationDate
 import Gerber.Attribute.FileFunction
@@ -11,7 +14,6 @@ import Gerber.Attribute.GenerationSoftware
 import Gerber.Attribute.MD5
 import Gerber.Attribute.Part
 import Gerber.Attribute.ProjectId
-import Gerber.Attribute.AperFunction
 
 -- text
 import Data.Text (Text)
@@ -33,19 +35,18 @@ data ApertureAttribute
   = AperFunction !AperFunction
   | DrillTolerance !Tolerance
   | FlashText
-    { text :: Text
-    , bOrC :: Char
-    , rOrM :: Maybe Char
-    , font :: Maybe Text
-    , fontSize :: Maybe Int
-    , comment :: Maybe Text
-    }
+      { text :: Text
+      , bOrC :: Char
+      , rOrM :: Maybe Char
+      , font :: Maybe Text
+      , fontSize :: Maybe Int
+      , comment :: Maybe Text
+      }
   deriving (Eq, Show)
 
 
-
 data Tolerance = Tolerance
- { plusTolerance :: !Float
- , minusTolerance :: !Float
- }
- deriving (Eq, Show)
+  { plusTolerance :: !Float
+  , minusTolerance :: !Float
+  }
+  deriving (Eq, Show)

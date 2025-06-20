@@ -977,6 +977,14 @@ apertureAttribute =
       , flashTextParser
       ]
   where
+
+    -- sometimes the string looks like 'Pad Free-** (29.8mm,10.575mm)' in '%TA.AperFunction,OtherDrill,Pad Free-** (29.8mm,10.575mm)*%'
+    -- that is why we don't re-use `string` below
+    restAsString =
+      -- we use the less efficient `manyTill` with 'lookAhead' because we want to consume everything up to the
+      -- terminator but not the terminator itself `*%`
+      StrictText.pack <$> Megaparsec.manyTill Megaparsec.anySingle (Megaparsec.lookAhead (Megaparsec.string "*%"))
+
     aperFunctionParser = do
       _ <- Megaparsec.string "AperFunction,"
       fmap Gerber.Attribute.AperFunction $
@@ -988,7 +996,7 @@ apertureAttribute =
             , componentDrill
             , mechanicalDrill
             , AperFunction.CastellatedDrill <$ Megaparsec.string "CastellatedDrill"
-            , AperFunction.OtherDrill <$> (Megaparsec.string "OtherDrill," *> string)
+            , AperFunction.OtherDrill <$> (Megaparsec.string "OtherDrill," *> restAsString)
             , AperFunction.ComponentPad <$ Megaparsec.string "ComponentPad"
             , AperFunction.SMDPad <$> (Megaparsec.string "SMDPad," *> padDefinitionParser)
             , AperFunction.BGAPad <$> (Megaparsec.string "BGAPad," *> padDefinitionParser)
@@ -1001,24 +1009,24 @@ apertureAttribute =
             , AperFunction.ThermalReliefPad <$ Megaparsec.string "ThermalReliefPad"
             , AperFunction.WasherPad <$ Megaparsec.string "WasherPad"
             , AperFunction.AntiPad <$ Megaparsec.string "AntiPad"
-            , AperFunction.OtherPad <$> (Megaparsec.string "OtherPad," *> string)
+            , AperFunction.OtherPad <$> (Megaparsec.string "OtherPad," *> restAsString)
             , AperFunction.Conductor <$ Megaparsec.string "Conductor"
             , AperFunction.EtchedComponent <$ Megaparsec.string "EtchedComponent"
             , AperFunction.NonConductor <$ Megaparsec.string "NonConductor"
             , AperFunction.CopperBalancing <$ Megaparsec.string "CopperBalancing"
             , AperFunction.Border <$ Megaparsec.string "Border"
-            , AperFunction.OtherCopper <$> (Megaparsec.string "OtherCopper," *> string)
+            , AperFunction.OtherCopper <$> (Megaparsec.string "OtherCopper," *> restAsString)
             , AperFunction.ComponentMain <$ Megaparsec.string "ComponentMain"
             , AperFunction.ComponentOutline <$> (Megaparsec.string "ComponentOutline," *> outlineTypeParser)
             , AperFunction.ComponentPin <$ Megaparsec.string "ComponentPin"
             , AperFunction.Profile <$ Megaparsec.string "Profile"
             , AperFunction.NonMaterial <$ Megaparsec.string "NonMaterial"
             , AperFunction.Material <$ Megaparsec.string "Material"
-            , AperFunction.Other <$> (Megaparsec.string "Other," *> string)
-            , Megaparsec.string "Drawing" *> string *> pure AperFunction.Drawing
-            , Megaparsec.string "CutOut" *> string *> pure AperFunction.CutOut
-            , Megaparsec.string "Slot" *> string *> pure AperFunction.Slot
-            , Megaparsec.string "Cavity" *> string *> pure AperFunction.Cavity
+            , AperFunction.Other <$> (Megaparsec.string "Other," *> restAsString)
+            , Megaparsec.string "Drawing" *>  restAsString *> pure AperFunction.Drawing
+            , Megaparsec.string "CutOut" *> restAsString *> pure AperFunction.CutOut
+            , Megaparsec.string "Slot" *> restAsString *> pure AperFunction.Slot
+            , Megaparsec.string "Cavity" *> restAsString *> pure AperFunction.Cavity
             ]
 
     viaDrill = do

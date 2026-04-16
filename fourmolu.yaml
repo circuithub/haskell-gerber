@@ -1,0 +1,15 @@
+indentation: 2
+comma-style: leading
+import-export-style: diff-friendly
+indent-wheres: true
+record-brace-space: false
+respectful: true
+haddock-style: multi-line
+newlines-between-decls: 2
+single-constraint-parens: auto
+fixities:
+  - infixr 3 &&
+# This is set to catch only excessively long lines (e.g. long explicit 
+# import lists), but to let most human-written long lines stand unless 
+# the human decides to break them
+column-limit: 160

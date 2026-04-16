@@ -1,0 +1,27 @@
+# Don't warn if a file is not matched by a formatter
+on-unmatched = "debug"
+
+[formatter.cabal]
+command = "cabal-fmt"
+options = [ "--tabular", "-i" ]
+includes = [ "*.cabal" ]
+excludes = []
+
+[formatter.nix]
+command = "nixpkgs-fmt"
+options = []
+includes = ["*.nix"]
+excludes = [ ]
+
+[formatter.fourmolu]
+command = "fourmolu"
+options = "-i"
+includes = [ "*.hs" ]
+excludes = [ ]
+priority = 0 # default but let's be explicit
+
+[formatter.ch-hs-imports]
+command = "ch-hs-imports"
+options = ["--overwrite", "--local-modules-from-current-dir", "--report-progress"]
+includes = [ "*.hs" ]
+priority = 1 # Run after fourmolu

@@ -17,7 +17,7 @@ module Gerber.Diagrams (
 ) where
 
 -- base
-import Data.List (foldl', unfoldr)
+import Data.List (unfoldr)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Typeable (Typeable)
 

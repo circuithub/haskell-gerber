@@ -6,7 +6,7 @@ module Gerber.Attribute (
 
 -- gerber
 import Gerber.Attribute.AperFunction
-import Gerber.Attribute.Attribute
+import Gerber.Attribute.Attribute ()
 import Gerber.Attribute.CreationDate
 import Gerber.Attribute.FileFunction
 import Gerber.Attribute.FilePolarity

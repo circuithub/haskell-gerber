@@ -768,25 +768,6 @@ field :: Megaparsec.MonadParsec e StrictText.Text m => m StrictText.Text
 field = StrictText.pack <$> (Megaparsec.string "," *> many (Megaparsec.noneOf [',', '*', '%']))
 
 
-username :: Megaparsec.MonadParsec e StrictText.Text m => m StrictText.Text
-username =
-  let
-    lowerUpper =
-      Megaparsec.oneOf ['a' .. 'z']
-        <|> Megaparsec.oneOf ['A' .. 'Z']
-
-    startChar =
-      Megaparsec.char '_' <|> lowerUpper <|> Megaparsec.char '$'
-
-    otherChar =
-      Megaparsec.char '.' <|> Megaparsec.char '_' <|> lowerUpper <|> Megaparsec.oneOf ['0' .. '9']
-   in
-    Megaparsec.label "username" $ do
-      first <- startChar
-      rest <- many otherChar
-      pure $ StrictText.pack (first : rest)
-
-
 fileAttribute :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Attribute.FileAttribute
 fileAttribute =
   asum $

@@ -6,12 +6,6 @@ module Gerber.Attribute.ProjectId (
   projectIdParser,
 ) where
 
--- base16-bytestring
-import Data.ByteString.Base16 (decode)
-
--- bytestring
-import qualified Data.ByteString.Lazy
-
 -- containers
 import qualified Data.Set as Set
 
@@ -25,7 +19,6 @@ import Text.Megaparsec.Error
 
 -- text
 import qualified Data.Text as StrictText
-import qualified Data.Text.Lazy as LazyText
 
 -- uuid-types
 import Data.UUID.Types (UUID, fromText)

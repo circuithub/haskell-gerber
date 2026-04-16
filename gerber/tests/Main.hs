@@ -1,13 +1,20 @@
-{-# language BlockArguments #-}
+{-# LANGUAGE BlockArguments #-}
 
-module Main ( main ) where
+module Main (main) where
 
-import Control.Monad ( guard, mzero, msum )
-import System.Directory ( doesDirectoryExist, setCurrentDirectory )
+-- base
+import Control.Monad (guard, msum, mzero)
+
+-- directory
+import System.Directory (doesDirectoryExist, setCurrentDirectory)
+
+-- gerber
+import qualified Gerber.Evaluate.GraphicsState.StackStream.Tests
+import qualified Gerber.Grammar.Tests
+
+-- tasty
 import qualified Test.Tasty
 
-import qualified Gerber.Grammar.Tests
-import qualified Gerber.Evaluate.GraphicsState.StackStream.Tests
 
 main :: IO ()
 main = do
@@ -20,13 +27,13 @@ changeToParentOfTestDataDirectory =
   msum
     -- run from cabal project directory
     [ doesDirectoryExist "./test-data" >>= guard
-    -- run from parent directory
-    , do
+    , -- run from parent directory
+      do
         doesDirectoryExist "./gerber" >>= guard
         setCurrentDirectory "./gerber"
         doesDirectoryExist "./test-data" >>= guard
-    -- run from some other directory
-    , putStrLn "Could not find `test-data` directory" >> mzero
+    , -- run from some other directory
+      putStrLn "Could not find `test-data` directory" >> mzero
     ]
 
 

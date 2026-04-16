@@ -1,8 +1,9 @@
-module Gerber.Mirroring ( Mirroring(..) ) where
+module Gerber.Mirroring (Mirroring (..)) where
+
 
 data Mirroring
   = MirrorNone
   | MirrorX
   | MirrorY
   | MirrorXY
-  deriving ( Eq, Show )
+  deriving (Eq, Show)

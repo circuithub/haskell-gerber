@@ -1,17 +1,20 @@
-{-# language DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Gerber.Evaluate.GraphicsState where
 
-import Data.Monoid ( Dual, First, Last )
-import Data.Monoid.Deletable ( Deletable )
-import Data.Sequence (Seq)
-import GHC.Generics ( Generic )
-import Generics.Deriving.Monoid ( memptydefault, mappenddefault )
-import Data.Text  (Text)
+-- base
+import Data.Monoid (Dual, First, Last)
+import GHC.Generics (Generic)
 
+-- containers
 import qualified Data.IntMap.Strict as IntMap
 import qualified Data.Map.Strict as Map
+import Data.Sequence (Seq)
 
+-- generic-deriving
+import Generics.Deriving.Monoid (mappenddefault, memptydefault)
+
+-- gerber
 import qualified Gerber.Command as Gerber
 import qualified Gerber.DCodeNumber as Gerber
 import qualified Gerber.Evaluate.Edge as Edge
@@ -26,31 +29,39 @@ import qualified Gerber.Polarity as Gerber
 import qualified Gerber.StepRepeat as Gerber
 import qualified Gerber.Unit as Gerber
 
+-- monoid-extras
+import Data.Monoid.Deletable (Deletable)
+
+-- text
+import Data.Text (Text)
+
 
 data GraphicsState m = GraphicsState
-  { coordinateSystem :: !( First ( Gerber.Padding, Gerber.Format, Gerber.Format ) )
-  , unit :: !( First Gerber.Unit )
-  , apertureDictionary :: !( IntMap.IntMap Gerber.ApertureEntry )
-  , macroDictionary :: !( Map.Map Text [MacroDefinition.Definition MacroDefinition.Modifier MacroDefinition.Modifier] )
-  , currentAperture :: !( Last Gerber.DCodeNumber )
-  , interpolationMode :: !( Last Gerber.InterpolationMode )
-  , currentPoint :: !( Last ( Float, Float ) )
-  , inRegion :: !( Last Bool )
-  , polarity :: !( Last Gerber.Polarity )
-  , currentContour :: !( Deletable ( First ( Float, Float ), Seq Edge.Edge ) )
-  , stepRepeat :: !( Deletable ( First Gerber.StepRepeat, Dual m ) )
-  , mirror :: !( Last Gerber.Mirroring )
-  , scale :: !( Last Float )
-  , rotate :: !( Last Float )
-  , blockApertureStack :: !( Gerber.StackStream Gerber.DCodeNumber Gerber.Command )
+  { coordinateSystem :: !(First (Gerber.Padding, Gerber.Format, Gerber.Format))
+  , unit :: !(First Gerber.Unit)
+  , apertureDictionary :: !(IntMap.IntMap Gerber.ApertureEntry)
+  , macroDictionary :: !(Map.Map Text [MacroDefinition.Definition MacroDefinition.Modifier MacroDefinition.Modifier])
+  , currentAperture :: !(Last Gerber.DCodeNumber)
+  , interpolationMode :: !(Last Gerber.InterpolationMode)
+  , currentPoint :: !(Last (Float, Float))
+  , inRegion :: !(Last Bool)
+  , polarity :: !(Last Gerber.Polarity)
+  , currentContour :: !(Deletable (First (Float, Float), Seq Edge.Edge))
+  , stepRepeat :: !(Deletable (First Gerber.StepRepeat, Dual m))
+  , mirror :: !(Last Gerber.Mirroring)
+  , scale :: !(Last Float)
+  , rotate :: !(Last Float)
+  , blockApertureStack :: !(Gerber.StackStream Gerber.DCodeNumber Gerber.Command)
   }
-  deriving ( Generic )
+  deriving (Generic)
 
-instance Monoid m => Semigroup ( GraphicsState m ) where
+
+instance Monoid m => Semigroup (GraphicsState m) where
   (<>) =
     mappenddefault
 
-instance Monoid m => Monoid ( GraphicsState m ) where
+
+instance Monoid m => Monoid (GraphicsState m) where
   mempty =
     memptydefault
 
@@ -59,6 +70,5 @@ initialGraphicsState :: Monoid m => GraphicsState m
 initialGraphicsState =
   mempty
     { polarity = pure Gerber.Dark
-    , currentPoint = pure ( 0, 0 )
+    , currentPoint = pure (0, 0)
     }
-

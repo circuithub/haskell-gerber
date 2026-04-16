@@ -4,7 +4,7 @@
     Format { integerPositions = 3 , decimalPositions = 6 }
     Format { integerPositions = 3 , decimalPositions = 6 }
 , MO MM
-, IngoredAttributeTF "FileFunction,Other,Sample"
+, TF (FileFunction (Other "Sample"))
 , LP Dark
 , G04 " Define Apertures"
 , AM

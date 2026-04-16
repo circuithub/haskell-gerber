@@ -1,19 +1,25 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 {-# HLINT ignore "Use camelCase" #-}
-module Gerber.Command where
+module Gerber.Command (
+  module Gerber.Command,
+) where
 
+-- gerber
+import Gerber.ApertureDefinition (ApertureDefinition)
+import Gerber.Attribute (ApertureAttribute, FileAttribute)
+import Gerber.DCodeNumber (DCodeNumber)
+import Gerber.Format (Format)
+import Gerber.MacroDefinition (Definition, Modifier)
+import Gerber.Mirroring (Mirroring)
+import Gerber.Movement (Movement)
+import Gerber.Padding (Padding)
+import Gerber.Polarity (Polarity)
+import Gerber.StepRepeat (StepRepeat)
+import Gerber.Unit (Unit)
+
+-- text
 import qualified Data.Text as StrictText
-
-import Gerber.ApertureDefinition ( ApertureDefinition )
-import Gerber.MacroDefinition ( Definition, Modifier )
-import Gerber.DCodeNumber ( DCodeNumber )
-import Gerber.Format ( Format )
-import Gerber.Mirroring ( Mirroring )
-import Gerber.Movement ( Movement )
-import Gerber.Padding ( Padding )
-import Gerber.Polarity ( Polarity )
-import Gerber.StepRepeat ( StepRepeat )
-import Gerber.Unit ( Unit )
 
 
 data Command
@@ -33,10 +39,9 @@ data Command
   | G74
   | G75
   | G71
-  | IP
   | LP !Polarity
   | MO !Unit
-  | OF !( Maybe Float ) !( Maybe Float )
+  | OF !(Maybe Float) !(Maybe Float)
   | AM !StrictText.Text ![Definition Modifier Modifier]
   | SR !StepRepeat
   | SR_End
@@ -48,8 +53,16 @@ data Command
   | LM !Mirroring
   | LR !Float
   | LS !Float
-  | IngoredAttributeTF !StrictText.Text
-  | IngoredAttributeTA !StrictText.Text
-  | IngoredAttributeTO !StrictText.Text
-  | IngoredAttributeTD !StrictText.Text
-  deriving ( Eq, Show )
+  | TF !FileAttribute
+  | TO !StrictText.Text ![StrictText.Text]
+  | TA !ApertureAttribute
+  | TD !(Maybe StrictText.Text)
+  | LN !StrictText.Text
+  | Deprecated DeprecatedCommand
+  deriving (Eq, Show)
+
+
+data DeprecatedCommand
+  = IN !StrictText.Text -- Deprecated since revision I4 from October 2013
+  | IP -- Deprecated since revision I4 from October 2013.
+  deriving (Eq, Show)

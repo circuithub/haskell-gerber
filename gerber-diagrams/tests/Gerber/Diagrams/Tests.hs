@@ -2,7 +2,7 @@
 
 module Gerber.Diagrams.Tests (tests) where
 
--- diagrams-gi-cairo
+-- diagrams-cairo
 import qualified Diagrams.Backend.Cairo
 
 -- diagrams-lib

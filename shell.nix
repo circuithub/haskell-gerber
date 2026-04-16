@@ -20,36 +20,68 @@ let
 
   ch-hs-imports =
     pkgs.haskellPackages.callPackage
-    ({ mkDerivation, abstract-par, base, containers, deepseq, directory
-    , dlist, fetchgit, filepath, lib, megaparsec, monad-par
-    , monad-par-extras, monoidal-containers, mtl, nonempty-containers
-    , optparse-applicative, process, text, transformers
-    }:
-    mkDerivation {
-      pname = "ch-hs-imports";
-      version = "0.1.0.0";
-      src = fetchgit {
-        url = "https://github.com/circuithub/ch-hs-imports";
-        sha256 = "1ayg2pbzgy3zwb14f084s4rbp0qaxn6fygg3l4avj7pc7kxb1z2j";
-        rev = "7e5b0bc5bc9dde28015784e9a61270a031a126dc";
-        fetchSubmodules = true;
-      };
-      isLibrary = false;
-      isExecutable = true;
-      executableHaskellDepends = [
-        abstract-par base containers deepseq directory dlist filepath
-        megaparsec monad-par monad-par-extras monoidal-containers mtl
-        nonempty-containers optparse-applicative process text transformers
-      ];
-      jailbreak = true;
-      license = lib.licenses.mit;
-      mainProgram = "ch-hs-imports";
-    }) {};
+      ({ mkDerivation
+       , abstract-par
+       , base
+       , containers
+       , deepseq
+       , directory
+       , dlist
+       , fetchgit
+       , filepath
+       , lib
+       , megaparsec
+       , monad-par
+       , monad-par-extras
+       , monoidal-containers
+       , mtl
+       , nonempty-containers
+       , optparse-applicative
+       , process
+       , text
+       , transformers
+       }:
+        mkDerivation {
+          pname = "ch-hs-imports";
+          version = "0.1.0.0";
+          src = fetchgit {
+            url = "https://github.com/circuithub/ch-hs-imports";
+            sha256 = "1ayg2pbzgy3zwb14f084s4rbp0qaxn6fygg3l4avj7pc7kxb1z2j";
+            rev = "7e5b0bc5bc9dde28015784e9a61270a031a126dc";
+            fetchSubmodules = true;
+          };
+          isLibrary = false;
+          isExecutable = true;
+          executableHaskellDepends = [
+            abstract-par
+            base
+            containers
+            deepseq
+            directory
+            dlist
+            filepath
+            megaparsec
+            monad-par
+            monad-par-extras
+            monoidal-containers
+            mtl
+            nonempty-containers
+            optparse-applicative
+            process
+            text
+            transformers
+          ];
+          jailbreak = true;
+          license = lib.licenses.mit;
+          mainProgram = "ch-hs-imports";
+        })
+      { };
 
 in
 haskellPackages.shellFor {
   buildInputs =
-    [ haskellPackages.cabal-install
+    [
+      haskellPackages.cabal-install
       pkgs.treefmt
       pkgs.nixpkgs-fmt
       haskellPackages.haskell-language-server

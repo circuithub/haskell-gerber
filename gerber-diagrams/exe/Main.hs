@@ -3,10 +3,7 @@
 
 module Main where
 
--- 
-import RIO
-
--- diagrams-gi-cairo
+-- diagrams-cairo
 import qualified Diagrams.Backend.Cairo
 
 -- diagrams-lib
@@ -24,6 +21,9 @@ import Gerber.Diagrams (gerberToDiagram)
 
 -- optparse-applicative
 import qualified Options.Applicative as OptParse
+
+-- rio
+import RIO
 
 -- text
 import qualified Data.Text.IO as StrictText

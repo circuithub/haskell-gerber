@@ -977,7 +977,6 @@ apertureAttribute =
       , flashTextParser
       ]
   where
-
     -- sometimes the string looks like 'Pad Free-** (29.8mm,10.575mm)' in '%TA.AperFunction,OtherDrill,Pad Free-** (29.8mm,10.575mm)*%'
     -- that is why we don't re-use `string` below
     restAsString =
@@ -1023,7 +1022,7 @@ apertureAttribute =
             , AperFunction.NonMaterial <$ Megaparsec.string "NonMaterial"
             , AperFunction.Material <$ Megaparsec.string "Material"
             , AperFunction.Other <$> (Megaparsec.string "Other," *> restAsString)
-            , Megaparsec.string "Drawing" *>  restAsString *> pure AperFunction.Drawing
+            , Megaparsec.string "Drawing" *> restAsString *> pure AperFunction.Drawing
             , Megaparsec.string "CutOut" *> restAsString *> pure AperFunction.CutOut
             , Megaparsec.string "Slot" *> restAsString *> pure AperFunction.Slot
             , Megaparsec.string "Cavity" *> restAsString *> pure AperFunction.Cavity

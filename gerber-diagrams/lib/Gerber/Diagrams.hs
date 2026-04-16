@@ -225,7 +225,6 @@ fromEdges currentPoint (Edge.ArcCW center end : edges) =
         -- performed. In this mode a circular arc is allowed to extend over more
         -- than 90°. If the start point of the arc is equal to the end point the arc
         -- is a full circle of 360°.
-
           Diagrams.arc
             (realToFrac <$> Diagrams.direction toStart)
             (1 Diagrams.@@ Diagrams.turn)
@@ -253,7 +252,6 @@ fromEdges currentPoint (Edge.ArcCCW center end : edges) =
         -- performed. In this mode a circular arc is allowed to extend over more
         -- than 90°. If the start point of the arc is equal to the end point the arc
         -- is a full circle of 360°.
-
           Diagrams.arc
             (realToFrac <$> Diagrams.direction toStart)
             (1 Diagrams.@@ Diagrams.turn)
@@ -462,8 +460,7 @@ renderMacro = foldMap Diagrams.stroke . foldl' addToOnPaths [] . concatMap (expl
           ,
             [ rotate
                 (MacroDefinition.thermalRotation a)
-                ( Diagrams.translate (MacroDefinition.thermalCenter a) thermal
-                )
+                (Diagrams.translate (MacroDefinition.thermalCenter a) thermal)
             ]
           )
           where

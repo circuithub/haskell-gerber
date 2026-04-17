@@ -1,9 +1,22 @@
 let
   pkgs = import
     (fetchTarball {
-      name = "release-23.11";
+
+      # Note we should make sure everything builds with lower bound and upper bound package
+      # set which requires having some warnings in when compiling in both, e.g. in the lower
+      # bound we need to import Data.List (foldl') and in the upper bound this is a warning
+      # for an unused import. Technically I guess we could use CPP to clean this up but that
+      # is more work.
+
+      # the current upper bound
+      name = "release-25.11";
       url = "https://github.com/NixOS/nixpkgs/archive/refs/tags/25.11.tar.gz";
       sha256 = sha256:1zn1lsafn62sz6azx6j735fh4vwwghj8cc9x91g5sx2nrg23ap9k;
+
+      # # the original lower bound for packages
+      # name = "release-23.11";
+      # url = "https://github.com/NixOS/nixpkgs/archive/refs/tags/23.11.tar.gz";
+      # sha256 = sha256:1ndiv385w1qyb3b18vw13991fzb9wg4cl21wglk89grsfsnra41k;
     })
     { config = { allowBroken = true; }; };
 

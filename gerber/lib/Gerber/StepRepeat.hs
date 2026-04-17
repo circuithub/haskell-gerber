@@ -4,7 +4,7 @@ module Gerber.StepRepeat (StepRepeat (..)) where
 data StepRepeat = StepRepeat
   { xRepeats :: !Int
   , yRepeats :: !Int
-  , xStep :: !Float
-  , yStep :: !Float
+  , xStep :: !Double
+  , yStep :: !Double
   }
   deriving (Eq, Show)

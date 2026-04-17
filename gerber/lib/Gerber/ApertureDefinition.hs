@@ -10,24 +10,24 @@ data ApertureDefinition
 
 
 data CircleModifiers = CircleModifiers
-  { diameter :: !Float
-  , circleHoleDiameter :: !(Maybe Float)
+  { diameter :: !Double
+  , circleHoleDiameter :: !(Maybe Double)
   }
   deriving (Eq, Ord, Show)
 
 
 data RectangleModifiers = RectangleModifiers
-  { width :: !Float
-  , height :: !Float
-  , rectangleHoleDiameter :: !(Maybe Float)
+  { width :: !Double
+  , height :: !Double
+  , rectangleHoleDiameter :: !(Maybe Double)
   }
   deriving (Eq, Ord, Show)
 
 
 data PolygonModifiers = PolygonModifiers
-  { outerDiameter :: !Float
+  { outerDiameter :: !Double
   , numberOfVertices :: !Int
-  , rotation :: !(Maybe Float)
-  , polygonHoleDiameter :: !(Maybe Float)
+  , rotation :: !(Maybe Double)
+  , polygonHoleDiameter :: !(Maybe Double)
   }
   deriving (Eq, Ord, Show)

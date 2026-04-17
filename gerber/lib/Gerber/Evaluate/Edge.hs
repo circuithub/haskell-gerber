@@ -2,7 +2,7 @@ module Gerber.Evaluate.Edge where
 
 
 data Edge
-  = Line (Float, Float)
-  | ArcCW (Float, Float) (Float, Float)
-  | ArcCCW (Float, Float) (Float, Float)
+  = Line (Double, Double)
+  | ArcCW (Double, Double) (Double, Double)
+  | ArcCCW (Double, Double) (Double, Double)
   deriving (Show)

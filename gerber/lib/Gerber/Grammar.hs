@@ -62,7 +62,7 @@ import qualified Text.Megaparsec.Char.Lexer as Megaparsec
 import qualified Data.Text as StrictText
 
 
-float :: Megaparsec.MonadParsec e StrictText.Text m => m Float
+float :: Megaparsec.MonadParsec e StrictText.Text m => m Double
 float = do
   negated <- maybe id (const negate) <$> optional (Megaparsec.char '-')
 

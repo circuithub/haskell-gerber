@@ -58,8 +58,8 @@ data Evaluator m = Evaluator
   { line ::
       Polarity.Polarity ->
       ApertureDefinition.ApertureDefinition ->
-      (Float, Float) ->
-      (Float, Float) ->
+      (Double, Double) ->
+      (Double, Double) ->
       m
   , flash ::
       Polarity.Polarity ->
@@ -67,28 +67,28 @@ data Evaluator m = Evaluator
       m
   , flashMacro ::
       Polarity.Polarity ->
-      [MacroDefinition.Primitive MacroDefinition.Exposure Float] ->
+      [MacroDefinition.Primitive MacroDefinition.Exposure Double] ->
       m
   , fillRegion ::
       Polarity.Polarity ->
-      (Float, Float) ->
+      (Double, Double) ->
       [Edge.Edge] ->
       m
   , arc ::
       Polarity.Polarity ->
       ApertureDefinition.ApertureDefinition ->
-      (Float, Float) ->
-      (Float, Float) ->
-      (Float, Float) ->
+      (Double, Double) ->
+      (Double, Double) ->
+      (Double, Double) ->
       m
   , translate ::
-      Float ->
-      Float ->
+      Double ->
+      Double ->
       m ->
       m
   , mirror :: Mirroring.Mirroring -> m -> m
-  , rotate :: Float -> m -> m
-  , scale :: Float -> m -> m
+  , rotate :: Double -> m -> m
+  , scale :: Double -> m -> m
   }
 
 
@@ -560,7 +560,7 @@ step evaluator state
 moveTo ::
   GraphicsState.GraphicsState m ->
   Movement.Movement ->
-  ((Float, Float), (Float, Float))
+  ((Double, Double), (Double, Double))
 moveTo state to =
   let
     currentPoint =
@@ -571,7 +571,7 @@ moveTo state to =
         (error "Coordinate system undefined")
         (getFirst (GraphicsState.coordinateSystem state))
 
-    decodeCoordElement :: Format.Format -> EncodedDecimal.EncodedDecimal -> Float
+    decodeCoordElement :: Format.Format -> EncodedDecimal.EncodedDecimal -> Double
     decodeCoordElement fmt EncodedDecimal.EncodedDecimal{negative, digits} =
       let
         len =
@@ -619,7 +619,7 @@ moveTo state to =
     )
 
 
-getCurrentPoint :: GraphicsState.GraphicsState m -> (Float, Float)
+getCurrentPoint :: GraphicsState.GraphicsState m -> (Double, Double)
 getCurrentPoint state =
   fromMaybe
     (error "Current point undefined")
@@ -641,7 +641,7 @@ toMM state x =
         x * 25.4
 
 
-lookupEvalMacroInMM :: HasCallStack => GraphicsState.GraphicsState m -> Text -> [Float] -> [MacroDefinition.Primitive MacroDefinition.Exposure Float]
+lookupEvalMacroInMM :: HasCallStack => GraphicsState.GraphicsState m -> Text -> [Double] -> [MacroDefinition.Primitive MacroDefinition.Exposure Double]
 lookupEvalMacroInMM state name arguments = catMaybes $ evalState (traverse go content) initialState
   where
     name' = Text.unpack name
@@ -652,13 +652,13 @@ lookupEvalMacroInMM state name arguments = catMaybes $ evalState (traverse go co
         (error ("Macro definition not found: " ++ name'))
         (Map.lookup name (GraphicsState.macroDictionary state))
 
-    initialState :: IntMap.IntMap Float
+    initialState :: IntMap.IntMap Double
     initialState = IntMap.fromList $ zip [1 ..] arguments
 
     go ::
       HasCallStack =>
       MacroDefinition.Definition MacroDefinition.Modifier MacroDefinition.Modifier ->
-      State (IntMap.IntMap Float) (Maybe (MacroDefinition.Primitive MacroDefinition.Exposure Float))
+      State (IntMap.IntMap Double) (Maybe (MacroDefinition.Primitive MacroDefinition.Exposure Double))
     go = \case
       MacroDefinition.Variable variableName expression -> do
         v <- evalExpresion expression
@@ -673,8 +673,8 @@ lookupEvalMacroInMM state name arguments = catMaybes $ evalState (traverse go co
       where
         determineExposure ::
           HasCallStack =>
-          MacroDefinition.Primitive MacroDefinition.Modifier Float ->
-          State (IntMap.IntMap Float) (MacroDefinition.Primitive MacroDefinition.Exposure Float)
+          MacroDefinition.Primitive MacroDefinition.Modifier Double ->
+          State (IntMap.IntMap Double) (MacroDefinition.Primitive MacroDefinition.Exposure Double)
         determineExposure = \case
           MacroDefinition.Circle a ->
             (\exposure -> MacroDefinition.Circle a{MacroDefinition.circleExposure = exposure})
@@ -700,7 +700,7 @@ lookupEvalMacroInMM state name arguments = catMaybes $ evalState (traverse go co
               where
                 toExposure x = if x >= 1 then MacroDefinition.ExposureOn else MacroDefinition.ExposureOff
 
-        coordinatesToMM :: MacroDefinition.Primitive a Float -> MacroDefinition.Primitive a Float
+        coordinatesToMM :: MacroDefinition.Primitive a Double -> MacroDefinition.Primitive a Double
         coordinatesToMM = \case
           MacroDefinition.Circle a ->
             MacroDefinition.Circle (toMM state <$> a){MacroDefinition.circleRotation = MacroDefinition.circleRotation a}
@@ -717,7 +717,7 @@ lookupEvalMacroInMM state name arguments = catMaybes $ evalState (traverse go co
           MacroDefinition.Thermal a ->
             MacroDefinition.Thermal (toMM state <$> a){MacroDefinition.thermalRotation = MacroDefinition.thermalRotation a}
 
-        evalExpresion :: HasCallStack => MacroDefinition.Modifier -> State (IntMap.IntMap Float) Float
+        evalExpresion :: HasCallStack => MacroDefinition.Modifier -> State (IntMap.IntMap Double) Double
         evalExpresion = \case
           MacroDefinition.Decimal a ->
             pure a

@@ -110,6 +110,28 @@ evaluate' initialStatue evaluator =
     fst
 
 
+{- Note [Interpolation mode reset after arc commands inside a region]
+
+After G02/G03 arc commands inside a region, the interpolation mode
+persisted as CircularCW/CCW. Subsequent D01 commands without I/J offsets
+were then incorrectly processed as circular arcs with degenerate
+parameters (center at current point, zero-length end vector), producing
+undefined direction vectors and garbage arc shapes in the output.
+
+If the interpolation mode is circular but no I/J offsets were
+provided, fall back to linear interpolation. D01 without I/J in
+circular mode is invalid per the Gerber spec, but occurs in
+practice when the mode is not reset after an arc section.
+-}
+
+-- Note [Interpolation mode reset after arc commands inside a region]
+hasOffset :: Movement.Movement -> Bool
+hasOffset to =
+  case (Movement.i to, Movement.j to) of
+    (Nothing, Nothing) -> False
+    _ -> True
+
+
 step ::
   forall m.
   Monoid m =>
@@ -197,6 +219,11 @@ step evaluator state
             let
               (newPoint, offset) =
                 moveTo state to
+
+              -- See Note [Interpolation mode reset after arc commands inside a region]
+              interp
+                | hasOffset to = currentInterpolationMode state
+                | otherwise = InterpolationMode.Linear
              in
               ( mempty
               , mempty
@@ -214,7 +241,7 @@ step evaluator state
                             currentPoint =
                               getCurrentPoint state
                            in
-                            pure $ case currentInterpolationMode state of
+                            pure $ case interp of
                               InterpolationMode.Linear ->
                                 Edge.Line newPoint
                               InterpolationMode.CircularCW ->
@@ -238,8 +265,10 @@ step evaluator state
             mempty
           ApertureEntry.BasicAperture apertureDefinition ->
             let
-              interp =
-                currentInterpolationMode state
+              -- See Note [Interpolation mode reset after arc commands inside a region]
+              interp
+                | hasOffset to = currentInterpolationMode state
+                | otherwise = InterpolationMode.Linear
 
               (newPoint, offset) =
                 moveTo state to

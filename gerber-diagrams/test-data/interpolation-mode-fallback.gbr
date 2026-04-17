@@ -1,0 +1,30 @@
+G04 Test: D01 without I/J after circular mode must fall back to linear*
+G04 Reproduces a bug where the interpolation mode stayed CircularCW after*
+G04 a G02 arc section, causing later D01 draws to render as garbage arcs*
+%FSLAX36Y36*%
+%MOMM*%
+%LPD*%
+%ADD10C,0.500*%
+D10*
+G01*
+G75*
+G36*
+X0Y0D02*
+X10000000D01*
+Y10000000D01*
+X0D01*
+Y0D01*
+D02*
+G37*
+%LPC*%
+G36*
+X5000000Y5000000D02*
+G02X5000000Y5000000I3000000J0D01*
+D02*
+G37*
+%LPD*%
+X1000000Y5000000D02*
+X9000000D01*
+X5000000Y1000000D02*
+Y9000000D01*
+M02*

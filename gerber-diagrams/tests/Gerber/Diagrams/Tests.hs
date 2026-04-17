@@ -67,6 +67,7 @@ tests =
     , mkGolden "haskell-badge-solder-mask-top"
     , mkGolden "haskell-badge-stencil-bottom"
     , mkGolden "haskell-badge-stencil-top"
+    , mkGolden "interpolation-mode-fallback"
     ]
   where
     mkGolden example = goldenVsFileDiff example differ goldenPath testPath writeOutput

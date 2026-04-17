@@ -8,7 +8,6 @@ module Gerber.EncodedDecimal (EncodedDecimal (EncodedDecimal, StoredEncodedDecim
 
 -- base
 import Data.Int
-import Data.List (foldl')
 import Data.Word
 
 

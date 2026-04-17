@@ -12,16 +12,12 @@ import Control.Applicative (many, (<|>))
 -- containers
 import qualified Data.Set as Set
 
--- gerber
-import Gerber.Attribute.Attribute (Field)
-
 -- megaparsec
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as Megaparsec
 import Text.Megaparsec.Error
 
 -- text
-import Data.Text (unpack)
 import qualified Data.Text as StrictText
 
 -- time

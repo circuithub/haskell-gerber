@@ -11,5 +11,5 @@ import qualified Gerber.MacroDefinition as MacroDefinition
 
 data ApertureEntry
   = BasicAperture !Gerber.ApertureDefinition
-  | MacroAperture ![MacroDefinition.Primitive MacroDefinition.Exposure Float]
+  | MacroAperture ![MacroDefinition.Primitive MacroDefinition.Exposure Double]
   | BlockAperture ![Gerber.Command]

@@ -19,7 +19,7 @@ data Exposure
 
 
 data Modifier
-  = Decimal Float
+  = Decimal Double
   | VariableReference Int
   | Parentheses Modifier
   | UnaryPlus Modifier

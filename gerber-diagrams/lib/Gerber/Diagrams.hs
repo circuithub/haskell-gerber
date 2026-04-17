@@ -201,7 +201,7 @@ fromEdges ::
   , RealFloat (Diagrams.N a)
   , Diagrams.V a ~ Linear.V2
   ) =>
-  (Float, Float) ->
+  (Double, Double) ->
   [Edge.Edge] ->
   a
 fromEdges _ [] =
@@ -320,7 +320,7 @@ strokeAperture aperture =
 
 renderMacro ::
   Diagrams.Renderable (Diagrams.Path V2 Double) b =>
-  [MacroDefinition.Primitive MacroDefinition.Exposure Float] ->
+  [MacroDefinition.Primitive MacroDefinition.Exposure Double] ->
   Diagrams.QDiagram b V2 Double Diagrams.Any
 -- A whole macro is flashed with either dark or clear polarity, primitives with exposure off remove areas where flashing occur,
 -- so all primitives are generated as paths and then combined with 'Diagrams.TwoD.Path.Boolean' to make a single diagram filled

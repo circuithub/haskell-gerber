@@ -25,7 +25,7 @@ import qualified Data.Text as StrictText
 data Command
   = FS !Padding !Format !Format
   | AD !DCodeNumber !ApertureDefinition
-  | MacroAD !DCodeNumber !StrictText.Text ![Float]
+  | MacroAD !DCodeNumber !StrictText.Text ![Double]
   | D !DCodeNumber
   | D01 !Movement
   | D02 !Movement
@@ -41,7 +41,7 @@ data Command
   | G71
   | LP !Polarity
   | MO !Unit
-  | OF !(Maybe Float) !(Maybe Float)
+  | OF !(Maybe Double) !(Maybe Double)
   | AM !StrictText.Text ![Definition Modifier Modifier]
   | SR !StepRepeat
   | SR_End
@@ -51,8 +51,8 @@ data Command
   | AB !DCodeNumber
   | AB_End
   | LM !Mirroring
-  | LR !Float
-  | LS !Float
+  | LR !Double
+  | LS !Double
   | TF !FileAttribute
   | TO !StrictText.Text ![StrictText.Text]
   | TA !ApertureAttribute

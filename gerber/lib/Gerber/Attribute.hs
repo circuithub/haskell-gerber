@@ -46,7 +46,7 @@ data ApertureAttribute
 
 
 data Tolerance = Tolerance
-  { plusTolerance :: !Float
-  , minusTolerance :: !Float
+  { plusTolerance :: !Double
+  , minusTolerance :: !Double
   }
   deriving (Eq, Show)

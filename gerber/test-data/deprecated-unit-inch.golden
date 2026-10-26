@@ -1,0 +1,65 @@
+[ G04
+    " #@! TF.GenerationSoftware,Altium Limited,Altium Designer,26.10.1 (5)"
+, FS
+    PadLeading
+    Format { integerPositions = 2 , decimalPositions = 4 }
+    Format { integerPositions = 2 , decimalPositions = 4 }
+, MO IN
+, G70
+, G01
+, G75
+, AD
+    10
+    (Circle
+       CircleModifiers
+         { diameter = 1.0e-2 , circleHoleDiameter = Nothing })
+, D 10
+, D02
+    Movement
+      { x = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D01
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 1 , 0 , 0 , 0 , 0 ] }
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D01
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 1 , 0 , 0 , 0 , 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 1 , 0 , 0 , 0 , 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D01
+    Movement
+      { x = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 1 , 0 , 0 , 0 , 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D01
+    Movement
+      { x = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, M02
+]

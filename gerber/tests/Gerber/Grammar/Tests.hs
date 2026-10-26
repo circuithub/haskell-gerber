@@ -43,6 +43,8 @@ tests =
     , mkGolden "sample-2-copper-top-panelised"
     , mkGolden "sample-3-panel-outline"
     , mkGolden "stencil-top"
+    , -- Altium's RS-274X export writes the deprecated G70 after %MOIN
+      mkGolden "deprecated-unit-inch"
     ]
   where
     mkGolden example = goldenVsStringDiff example differ ("test-data/" ++ example ++ ".golden") parser

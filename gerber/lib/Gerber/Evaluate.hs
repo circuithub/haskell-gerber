@@ -428,6 +428,8 @@ step evaluator state
             { GraphicsState.interpolationMode = pure InterpolationMode.CircularCCW
             }
         )
+      Command.G70 ->
+        (mempty, mempty{GraphicsState.unit = pure Unit.IN})
       Command.G71 ->
         (mempty, mempty{GraphicsState.unit = pure Unit.MM})
       Command.OF (Just 0) (Just 0) ->

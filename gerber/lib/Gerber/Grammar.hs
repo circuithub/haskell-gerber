@@ -257,6 +257,15 @@ g37 =
       <* endOfBlock
 
 
+-- | Deprecated since 2012 but still written by Altium's RS-274X export for inch files.
+g70 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
+g70 =
+  Megaparsec.label "G70" $
+    Gerber.G70
+      <$ Megaparsec.string "G70"
+      <* endOfBlock
+
+
 g71 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 g71 =
   Megaparsec.label "G71" $
@@ -735,6 +744,7 @@ command =
         , g74
         , g75
         , g03
+        , g70
         , g71
         , sf
         , mi

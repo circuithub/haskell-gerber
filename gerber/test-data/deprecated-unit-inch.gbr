@@ -1,0 +1,14 @@
+G04 #@! TF.GenerationSoftware,Altium Limited,Altium Designer,26.10.1 (5)*
+%FSLAX24Y24*%
+%MOIN*%
+G70*
+G01*
+G75*
+%ADD10C,0.0100*%
+D10*
+X0Y0D02*
+X10000Y0D01*
+X10000Y10000D01*
+X0Y10000D01*
+X0Y0D01*
+M02*

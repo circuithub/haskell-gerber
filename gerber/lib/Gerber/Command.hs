@@ -38,6 +38,7 @@ data Command
   | G37
   | G74
   | G75
+  | G70
   | G71
   | LP !Polarity
   | MO !Unit

@@ -1,0 +1,122 @@
+[ TF
+    (FileFunction
+       (Copper Copper { index = Index 1 , mark = Top , type_ = Nothing }))
+, FS
+    PadLeading
+    Format { integerPositions = 4 , decimalPositions = 6 }
+    Format { integerPositions = 4 , decimalPositions = 6 }
+, MO MM
+, AD
+    10
+    (Circle
+       CircleModifiers { diameter = 0.2 , circleHoleDiameter = Nothing })
+, G01
+, G75
+, D 10
+, D02
+    Movement
+      { x = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, G02
+, D01
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 2 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 2 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , i = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , j =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 2 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      }
+, G01
+, D01
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 4 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 2 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, G36
+, D02
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 6 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, D01
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 8 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, G02
+, D01
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 8 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 2 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , i = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , j =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 1 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      }
+, G03
+, D01
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 6 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , y =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 2 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , i =
+          Just
+            EncodedDecimal
+              { negative = True , digits = [ 1 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , j = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      }
+, G01
+, D01
+    Movement
+      { x =
+          Just
+            EncodedDecimal
+              { negative = False , digits = [ 6 , 0 , 0 , 0 , 0 , 0 , 0 ] }
+      , y = Just EncodedDecimal { negative = False , digits = [ 0 ] }
+      , i = Nothing
+      , j = Nothing
+      }
+, G37
+, M02
+]

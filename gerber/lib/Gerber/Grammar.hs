@@ -233,6 +233,14 @@ g01 =
       <* endOfBlock
 
 
+g02 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
+g02 =
+  Megaparsec.label "G02" $
+    Gerber.G02
+      <$ Megaparsec.string "G02"
+      <* endOfBlock
+
+
 g03 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
 g03 =
   Megaparsec.label "G03" $
@@ -743,6 +751,7 @@ command =
         , g37
         , g74
         , g75
+        , g02
         , g03
         , g70
         , g71

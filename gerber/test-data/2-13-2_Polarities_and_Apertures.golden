@@ -389,8 +389,6 @@
       }
 , G02
 , D01
-    Movement { x = Nothing , y = Nothing , i = Nothing , j = Nothing }
-, D01
     Movement
       { x =
           Just
@@ -418,8 +416,6 @@
       , j = Nothing
       }
 , G02
-, D01
-    Movement { x = Nothing , y = Nothing , i = Nothing , j = Nothing }
 , D01
     Movement
       { x =

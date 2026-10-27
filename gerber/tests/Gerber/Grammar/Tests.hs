@@ -45,6 +45,8 @@ tests =
     , mkGolden "stencil-top"
     , -- Altium's RS-274X export writes the deprecated G70 after %MOIN
       mkGolden "deprecated-unit-inch"
+    , -- A clockwise arc as its own command, as every X2 writer emits it
+      mkGolden "standalone-g02"
     ]
   where
     mkGolden example = goldenVsStringDiff example differ ("test-data/" ++ example ++ ".golden") parser

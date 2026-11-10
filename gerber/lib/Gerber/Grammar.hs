@@ -15,7 +15,7 @@ module Gerber.Grammar (
 
 -- base
 import Control.Applicative (empty, many, optional, some, (<**>), (<|>))
-import Control.Monad (guard, void)
+import Control.Monad (guard, void, (<$!>))
 import Data.Char (isDigit)
 import Data.Foldable (asum)
 import Data.List (foldl')
@@ -376,7 +376,8 @@ movement =
           , pure False
           ]
 
-      Gerber.fromDigitText negative_ <$> Megaparsec.takeWhileP Nothing isDigit
+      -- Forced, so a parsed coordinate keeps no slice of the source
+      Gerber.fromDigitText negative_ <$!> Megaparsec.takeWhileP Nothing isDigit
 
 
 stepRepeat :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.StepRepeat
@@ -1257,8 +1258,9 @@ foldGerber (Fold.Fold step begin done) input =
     run parser state = case Megaparsec.runParser' parser state of
       (state', result) -> (,) state' <$> result
 
-    -- as 'gerberFile': command blocks until the closing M02 and the end of input
-    next = Left <$> (m02 <* Megaparsec.eof) <|> Right <$> (commands <|> some extendedCommands)
+    -- as 'gerberFile', a block at a time so a long run of blocks is never held: command blocks until the
+    -- closing M02 and the end of input
+    next = Left <$> (m02 <* Megaparsec.eof) <|> Right <$> ((pure <$> command) <|> deprecated <|> (pure <$> extendedCommands))
 
     go !accumulator state =
       run next state >>= \case

@@ -112,6 +112,10 @@ evaluate' initialStatue evaluator =
     fst
 
 
+strictPoint :: (Double, Double) -> (Double, Double)
+strictPoint (x, y) = x `seq` y `seq` (x, y)
+
+
 {- Note [Interpolation mode reset after arc commands inside a region]
 
 After G02/G03 arc commands inside a region, the interpolation mode
@@ -238,22 +242,25 @@ step evaluator state
                                 (dx, dy) =
                                   offset
                                in
-                                (fst currentPoint + dx, snd currentPoint + dy)
+                                strictPoint (fst currentPoint + dx, snd currentPoint + dy)
 
                             currentPoint =
                               getCurrentPoint state
-                           in
-                            pure $ case interp of
+
+                            -- Decoded as added: a region's edges would otherwise each hold the state before them.
+                            !edge = case interp of
                               InterpolationMode.Linear ->
-                                Edge.Line newPoint
+                                Edge.Line (strictPoint newPoint)
                               InterpolationMode.CircularCW ->
                                 Edge.ArcCW
                                   center
-                                  newPoint
+                                  (strictPoint newPoint)
                               InterpolationMode.CircularCCW ->
                                 Edge.ArcCCW
                                   center
-                                  newPoint
+                                  (strictPoint newPoint)
+                           in
+                            pure edge
                         )
                   , GraphicsState.currentPoint =
                       pure newPoint

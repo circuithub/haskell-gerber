@@ -5,8 +5,11 @@ module Gerber.Grammar.Tests (tests) where
 -- bytestring
 import Data.ByteString.Lazy.Char8 (pack)
 
+-- foldl
+import qualified Control.Foldl as Fold
+
 -- gerber
-import Gerber.Grammar (parseGerber)
+import Gerber.Grammar (foldGerber, parseGerber)
 
 -- megaparsec
 import Text.Megaparsec (errorBundlePretty)
@@ -49,10 +52,17 @@ tests =
       mkGolden "standalone-g02"
     ]
   where
-    mkGolden example = goldenVsStringDiff example differ ("test-data/" ++ example ++ ".golden") parser
+    -- every example is parsed whole and streamed, against the same golden file
+    mkGolden example =
+      testGroup
+        example
+        [ golden "parsed" parseGerber
+        , golden "streamed" (foldGerber Fold.list)
+        ]
       where
+        golden name parse = goldenVsStringDiff name differ ("test-data/" ++ example ++ ".golden") (parser parse)
         differ ref new = ["diff", "-u", ref, new]
-        parser = Text.readFile filepath >>= either onFailure onSuccess . parseGerber
+        parser parse = Text.readFile filepath >>= either onFailure onSuccess . parse
           where
             filepath = "test-data/" ++ example ++ ".gbr"
             onFailure = fail . errorBundlePretty

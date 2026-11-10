@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
@@ -11,7 +12,6 @@ module Gerber.Evaluate (
 
 -- base
 import Control.Monad ((<=<))
-import Data.Char (intToDigit)
 import Data.Foldable (toList)
 import Data.Maybe (catMaybes, fromMaybe)
 import Data.Monoid (Dual (..), First (..), getLast)
@@ -38,7 +38,6 @@ import qualified Gerber.Format as Format
 import qualified Gerber.MacroDefinition as MacroDefinition
 import qualified Gerber.Mirroring as Mirroring
 import qualified Gerber.Movement as Movement
-import qualified Gerber.Padding as Padding
 import qualified Gerber.Polarity as Polarity
 import qualified Gerber.StepRepeat as StepRepeat
 import qualified Gerber.Unit as Unit
@@ -99,12 +98,15 @@ evaluate = evaluate' GraphicsState.initialGraphicsState
 evaluate' :: Monoid m => GraphicsState.GraphicsState m -> Evaluator m -> Fold.Fold Command.Command m
 evaluate' initialStatue evaluator =
   Fold.Fold
+    -- Both are forced so a long gerber builds no chains of thunks.
     ( \(drawing, state) command ->
         let
           (d, s) =
             step evaluator state command
+          !drawing' = d <> drawing
+          !state' = state <> s
          in
-          (d <> drawing, state <> s)
+          (drawing', state')
     )
     (mempty, initialStatue)
     fst
@@ -574,29 +576,8 @@ moveTo state to =
         (getFirst (GraphicsState.coordinateSystem state))
 
     decodeCoordElement :: Format.Format -> EncodedDecimal.EncodedDecimal -> Double
-    decodeCoordElement fmt EncodedDecimal.EncodedDecimal{negative, digits} =
-      let
-        len =
-          Format.integerPositions fmt + Format.decimalPositions fmt
-
-        padded =
-          case padding of
-            Padding.PadLeading ->
-              replicate (len - length digits) 0 <> digits
-            Padding.PadTrailing ->
-              take len (digits ++ repeat 0)
-
-        (intPart, dec) =
-          splitAt (length padded - Format.decimalPositions fmt) padded
-
-        sign =
-          if negative
-            then -1
-            else 1
-       in
-        toMM
-          state
-          (read (map intToDigit intPart <> "." <> map intToDigit dec) * sign)
+    decodeCoordElement fmt =
+      toMM state . EncodedDecimal.decodeEncodedDecimal padding fmt
    in
     (
       ( maybe

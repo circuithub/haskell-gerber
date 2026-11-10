@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
@@ -8,17 +9,22 @@
 
 module Gerber.Grammar (
   parseGerber,
+  foldGerber,
   parseGerberPretty,
 ) where
 
 -- base
-import Control.Applicative (empty, many, optional, some, (<|>))
+import Control.Applicative (empty, many, optional, some, (<**>), (<|>))
 import Control.Monad (guard, void)
-import Data.Char (digitToInt, isDigit)
+import Data.Char (isDigit)
 import Data.Foldable (asum)
+import Data.List (foldl')
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Void (Void)
 import Text.Read (readMaybe)
+
+-- foldl
+import qualified Control.Foldl as Fold
 
 -- gerber
 import qualified Gerber.ApertureDefinition as Gerber
@@ -370,10 +376,7 @@ movement =
           , pure False
           ]
 
-      digits <-
-        map digitToInt . StrictText.unpack <$> Megaparsec.takeWhileP Nothing isDigit
-
-      return Gerber.EncodedDecimal{negative = negative_, ..}
+      Gerber.fromDigitText negative_ <$> Megaparsec.takeWhileP Nothing isDigit
 
 
 stepRepeat :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.StepRepeat
@@ -385,30 +388,18 @@ stepRepeat =
     <*> (Megaparsec.char 'J' *> negative float)
 
 
-d01 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
-d01 =
-  Megaparsec.label "D01" $
-    Gerber.D01
-      <$> movement
-      <* optional (Megaparsec.string "D01" <|> Megaparsec.string "D1")
-      <* endOfBlock
-
-
-d02 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
-d02 =
-  Megaparsec.label "D02" $
-    Gerber.D02
-      <$> movement
-      <* (Megaparsec.string "D02" <|> Megaparsec.string "D2")
-      <* endOfBlock
-
-
-d03 :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
-d03 =
-  Megaparsec.label "D03" $
-    Gerber.D03
-      <$> movement
-      <* (Megaparsec.string "D03" <|> Megaparsec.string "D3")
+{- | A D01, D02 or D03 operation. The coordinates are parsed once and the
+D-code after them picks the operation; without one it is a D01.
+-}
+operation :: Megaparsec.MonadParsec e StrictText.Text m => m Gerber.Command
+operation =
+  Megaparsec.label "D01, D02 or D03" $
+    movement
+      <**> asum
+        [ Gerber.D02 <$ (Megaparsec.string "D02" <|> Megaparsec.string "D2")
+        , Gerber.D03 <$ (Megaparsec.string "D03" <|> Megaparsec.string "D3")
+        , Gerber.D01 <$ optional (Megaparsec.string "D01" <|> Megaparsec.string "D1")
+        ]
       <* endOfBlock
 
 
@@ -744,9 +735,7 @@ command =
         [ g01
         , g04
         , d
-        , d01
-        , d02
-        , d03
+        , operation
         , g36
         , g37
         , g74
@@ -1205,7 +1194,7 @@ deprecated = do
       ]
 
   dcode <-
-    Megaparsec.try d01 <|> Megaparsec.try d02 <|> d03
+    operation
 
   return [g, dcode]
 
@@ -1234,6 +1223,47 @@ parseGerber ::
   Either (Megaparsec.ParseErrorBundle StrictText.Text Void) [Gerber.Command]
 parseGerber =
   Megaparsec.parse gerberFile "(gerber)"
+
+
+{- | Fold the commands 'parseGerber' would return, parsing each as the fold
+takes it so a large file's commands are never all held at once.
+-}
+foldGerber ::
+  Fold.Fold Gerber.Command a ->
+  StrictText.Text ->
+  Either (Megaparsec.ParseErrorBundle StrictText.Text Void) a
+foldGerber (Fold.Fold step begin done) input =
+  go begin . fst =<< run (many endOfBlock) initial
+  where
+    initial =
+      Megaparsec.State
+        { Megaparsec.stateInput = input
+        , Megaparsec.stateOffset = 0
+        , Megaparsec.statePosState =
+            Megaparsec.PosState
+              { Megaparsec.pstateInput = input
+              , Megaparsec.pstateOffset = 0
+              , Megaparsec.pstateSourcePos = Megaparsec.initialPos "(gerber)"
+              , Megaparsec.pstateTabWidth = Megaparsec.defaultTabWidth
+              , Megaparsec.pstateLinePrefix = ""
+              }
+        , Megaparsec.stateParseErrors = []
+        }
+
+    run ::
+      Megaparsec.Parsec Void StrictText.Text b ->
+      Megaparsec.State StrictText.Text Void ->
+      Either (Megaparsec.ParseErrorBundle StrictText.Text Void) (Megaparsec.State StrictText.Text Void, b)
+    run parser state = case Megaparsec.runParser' parser state of
+      (state', result) -> (,) state' <$> result
+
+    -- as 'gerberFile': command blocks until the closing M02 and the end of input
+    next = Left <$> (m02 <* Megaparsec.eof) <|> Right <$> (commands <|> some extendedCommands)
+
+    go !accumulator state =
+      run next state >>= \case
+        (_, Left end) -> Right (done (step accumulator end))
+        (state', Right block) -> go (foldl' step accumulator block) state'
 
 
 parseGerberPretty ::

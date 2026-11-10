@@ -3,7 +3,7 @@
 module Gerber.Evaluate.GraphicsState where
 
 -- base
-import Data.Monoid (Dual, First, Last)
+import Data.Monoid (Dual (Dual), First, Last)
 import GHC.Generics (Generic)
 
 -- containers
@@ -30,7 +30,7 @@ import qualified Gerber.StepRepeat as Gerber
 import qualified Gerber.Unit as Gerber
 
 -- monoid-extras
-import Data.Monoid.Deletable (Deletable)
+import Data.Monoid.Deletable (Deletable (Deletable))
 
 -- text
 import Data.Text (Text)
@@ -56,9 +56,14 @@ data GraphicsState m = GraphicsState
   deriving (Generic)
 
 
+-- The evaluator merges a state into the last after every command. The open
+-- region and step and repeat block wrap lazy pairs, which those merges would
+-- otherwise chain into thunks the length of the gerber.
 instance Monoid m => Semigroup (GraphicsState m) where
-  (<>) =
-    mappenddefault
+  a <> b =
+    case mappenddefault a b of
+      merged@GraphicsState{currentContour = Deletable _ (start, edges) _, stepRepeat = Deletable _ (block, Dual drawing) _} ->
+        start `seq` edges `seq` block `seq` drawing `seq` merged
 
 
 instance Monoid m => Monoid (GraphicsState m) where

@@ -4,12 +4,26 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Gerber.EncodedDecimal (EncodedDecimal (EncodedDecimal, StoredEncodedDecimal), negative, digits) where
+module Gerber.EncodedDecimal (
+  EncodedDecimal (EncodedDecimal, StoredEncodedDecimal),
+  negative,
+  digits,
+  fromDigitText,
+  decodeEncodedDecimal,
+) where
 
 -- base
+import Data.Char (ord)
 import Data.Int
 import Data.List (foldl')
 import Data.Word
+
+-- gerber
+import Gerber.Format (Format (Format, decimalPositions, integerPositions))
+import Gerber.Padding (Padding (PadLeading, PadTrailing))
+
+-- text
+import qualified Data.Text as Text
 
 
 pattern EncodedDecimal :: Bool -> [Int] -> EncodedDecimal
@@ -21,9 +35,10 @@ pattern EncodedDecimal{negative, digits} <- (toEncoded -> (negative, digits))
 {-# COMPLETE EncodedDecimal #-}
 
 
+-- | The digits of a coordinate as written: how many there are, and their value, negated for a negative coordinate.
 data EncodedDecimal = StoredEncodedDecimal
   { width :: {-# UNPACK #-} !Word8
-  , digitsAsInt :: {-# UNPACK #-} !Int32
+  , digitsAsInt :: {-# UNPACK #-} !Int64
   }
   deriving
     (Eq)
@@ -55,3 +70,32 @@ fromEncoded isNegative = doNegation . foldl' step zero . reverse
     doNegation
       | isNegative = \x@StoredEncodedDecimal{digitsAsInt} -> x{digitsAsInt = negate digitsAsInt}
       | otherwise = id
+
+
+-- | Like 'EncodedDecimal' from the text of the digits, which must all be ASCII digits.
+fromDigitText :: Bool -> Text.Text -> EncodedDecimal
+fromDigitText isNegative text =
+  StoredEncodedDecimal
+    { width = fromIntegral (Text.length text)
+    , digitsAsInt = (if isNegative then negate else id) (Text.foldl' (\value digit -> value * 10 + fromIntegral (ord digit - ord '0')) 0 text)
+    }
+
+
+{- | The coordinate the digits stand for in the format. Omitted leading zeros
+are restored on the left and omitted trailing zeros on the right, where
+digits beyond the format are dropped.
+
+The integer and the power of ten are both exact, so the one division rounds
+correctly: the result is the 'Double' nearest the decimal coordinate.
+-}
+decodeEncodedDecimal :: Padding -> Format -> EncodedDecimal -> Double
+decodeEncodedDecimal padding Format{integerPositions, decimalPositions} StoredEncodedDecimal{width, digitsAsInt} =
+  signum (fromIntegral digitsAsInt) * (fromIntegral scaled / 10 ^ decimalPositions)
+  where
+    magnitude = abs digitsAsInt
+    positions = integerPositions + decimalPositions
+    scaled = case padding of
+      PadLeading -> magnitude
+      PadTrailing
+        | fromIntegral width <= positions -> magnitude * 10 ^ (positions - fromIntegral width)
+        | otherwise -> magnitude `div` 10 ^ (fromIntegral width - positions)
